@@ -1,0 +1,81 @@
+# Byte-compiled / optimized / DLL files
+__pycache__/
+*.py[cod]
+*$py.class
+
+# C/C++ object files
+*.o
+*.out
+*.obj
+*.exe
+*.a
+*.so
+
+# Logs and debug files
+*.log
+*.trace
+*.tmp
+
+# VSCode / IDE
+.vscode/
+.idea/
+*.code-workspace
+
+# Virtual environment
+venv/
+env/
+ENV/
+.venv/
+
+# Raspberry Pi specific
+*.img
+*.swp
+*.bak
+*.pid
+*.gz
+*.elf
+*.dtb
+
+# System files
+.DS_Store
+Thumbs.db
+
+# Configs & Credentials
+*.config
+*.secret
+*.key
+*.pem
+*.crt
+
+# Python pip files
+*.egg-info/
+dist/
+build/
+
+# Jupyter notebooks
+.ipynb_checkpoints/
+
+# Compiled Cython files
+*.c
+*.cpp
+*.pyd
+
+# ROS cache (if using ROS)
+build/
+devel/
+log/
+
+# Optional: ignore test output or captured video
+captures/
+test_output/
+recordings/
+
+# Ignore dependencies if committed locally
+*.whl
+*.tar.gz
+*.zip
+
+# Ignore main executable (if compiled)
+main
+main.bin
+main.elf
