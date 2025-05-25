@@ -1,0 +1,5 @@
+POSE: x=11649.4mm y=3916.1mm theta=-10.2deg
+POSE: x=7398.7mm y=5275.4mm theta=4.9deg
+POSE: x=11577.0mm y=5032.2mm theta=10.1deg
+POSE: x=11085.3mm y=5463.1mm theta=16.2deg
+POSE: x=11287.6mm y=5096.4mm theta=4.1deg
