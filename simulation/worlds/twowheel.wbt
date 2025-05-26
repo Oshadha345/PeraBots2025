@@ -7,8 +7,8 @@ EXTERNPROTO "https://raw.githubusercontent.com/cyberbotics/webots/R2025a/project
 WorldInfo {
 }
 Viewpoint {
-  orientation 0.5633052163350541 -0.5894327740510409 -0.5790131588523806 4.231035600432828
-  position 0.06975029688962248 -0.7364793834161103 3.5777782591323106
+  orientation 0.31063873544537396 -0.6009155471314888 -0.7364808763685331 5.059164408709177
+  position -0.6977207103299642 -1.417718578384647 0.9433249571512239
 }
 TexturedBackground {
 }
@@ -195,9 +195,48 @@ Solid {
   locked TRUE
 }
 Robot {
-  translation -0.11504955489160609 -0.5136569652168681 0.03829199187729774
-  rotation -0.5293272718588455 0.5913686368258839 0.6083549742092752 -2.144322490675414
+  translation -0.11005353278655677 -0.5142098214849037 0.038287406129873885
+  rotation -0.5293453710201886 0.5913889531382115 0.6083194755106804 -2.1443716426807935
   children [
+    Gyro {
+      translation 0.02 0.02 0.03
+      children [
+        Shape {
+          appearance PBRAppearance {
+          }
+          geometry Box {
+            size 0.01 0.01 0.01
+          }
+        }
+      ]
+    }
+    Accelerometer {
+      translation 0 0.04 -0.05
+      children [
+        Shape {
+          appearance PBRAppearance {
+            baseColor 0 1 0.7
+          }
+          geometry Box {
+            size 0.05 0.05 0.05
+          }
+        }
+      ]
+    }
+    InertialUnit {
+      translation -0.03 0.02 0
+      children [
+        Shape {
+          appearance PBRAppearance {
+            metalness 0
+          }
+          geometry Box {
+            size 0.01 0.01 0.01
+          }
+        }
+      ]
+      name "inertial_unit"
+    }
     Lidar {
       translation 2.67257e-05 0.0299963 0.000272275
       rotation 0.5030470370970558 0.6020562948954822 0.6200579781315597 -2.19
@@ -243,22 +282,22 @@ Robot {
     }
     HingeJoint {
       jointParameters HingeJointParameters {
-        position 33.40538726436006
+        position 33.40538725587421
         anchor 0.0598 -0.017 -0.05
       }
       device [
         RotationalMotor {
-          name "left_motor"
+          name "left_wheel_motor"
           maxTorque 0.1
         }
         PositionSensor {
-          name "left_encoder"
+          name "left_wheel_sensor"
           resolution 0.01
         }
       ]
       endPoint Solid {
-        translation 0.059800001312102835 -0.016983315579688667 -0.04999952704347079
-        rotation 0.6425687620895989 -0.41738664803093595 -0.6425681069210798 2.3507830525285978
+        translation 0.059800001312102835 -0.016983315579684657 -0.049999527043612366
+        rotation 0.6425687610497125 -0.4173866512319806 -0.6425681058816958 2.3507830470751374
         children [
           DEF wheel Shape {
             appearance PBRAppearance {
@@ -276,28 +315,28 @@ Robot {
         physics Physics {
           mass 0.05
         }
-        linearVelocity -1.9302828005711324e-09 5.177955310267109e-10 2.85363910279556e-11
-        angularVelocity -9.593889228672797e-09 -8.639855017051971e-08 -8.259649069073808e-09
+        linearVelocity -3.764528804698567e-09 7.207589333333353e-10 9.248410748340676e-09
+        angularVelocity -1.980744805334492e-08 -1.7835300241419185e-07 -8.244227038209294e-09
       }
     }
     HingeJoint {
       jointParameters HingeJointParameters {
-        position 21.342179670343665
+        position 21.34217966127891
         anchor -0.0598 -0.017 -0.05
       }
       device [
         RotationalMotor {
-          name "right_motor"
+          name "right_wheel_motor"
           maxTorque 0.1
         }
         PositionSensor {
-          name "right_encoder"
+          name "right_wheel_sensor"
           resolution 0.01
         }
       ]
       endPoint Solid {
-        translation -0.05979999861182306 -0.016983315974141027 -0.049999522749515
-        rotation 0.6879158973571751 -0.23139663209377462 -0.6879151959500031 2.686803315890874
+        translation -0.05979999861182306 -0.016983315974136704 -0.049999522749666236
+        rotation 0.6879158968048671 -0.23139663537758112 -0.687915195397725 2.686803309652948
         children [
           USE wheel
         ]
@@ -305,18 +344,18 @@ Robot {
         physics Physics {
           mass 0.05
         }
-        linearVelocity -9.518378747861013e-10 4.091267867241634e-10 2.8568081233970768e-11
-        angularVelocity -9.59331128059782e-09 -8.639342032209162e-08 -8.25964867785095e-09
+        linearVelocity -2.7879158547799227e-09 6.122939724033801e-10 9.248308856513622e-09
+        angularVelocity -1.980310918882316e-08 -1.7831397279710805e-07 -8.244227128650935e-09
       }
     }
     BallJoint {
       jointParameters BallJointParameters {
-        position -37.28492017059717
+        position -37.28492822583285
         anchor 0 -0.03 0.05
       }
       endPoint Solid {
-        translation 8.274006075836837e-07 -0.029958514279020354 0.05000187526024716
-        rotation -0.5798090629615064 -0.5188420577030077 0.6281913479714669 -1.2990931585178993
+        translation 8.244958502601207e-07 -0.029949232210088814 0.050002142958611405
+        rotation -0.5798260172784835 -0.5189245050563752 0.6281075924863256 -1.2991836467546483
         children [
           DEF caster Shape {
             appearance PBRAppearance {
@@ -332,8 +371,8 @@ Robot {
         boundingObject USE caster
         physics Physics {
         }
-        linearVelocity -4.649841801562388e-10 1.2003531378638905e-09 5.269203737082296e-11
-        angularVelocity -2.286700085083714e-07 6.825445425537396e-08 4.539294183724364e-11
+        linearVelocity -1.3660006562675804e-09 1.3002670425598497e-09 -7.078642499079774e-12
+        angularVelocity -2.381929914368231e-07 -2.0402251214280592e-08 7.206692729936952e-11
       }
     }
   ]
@@ -342,6 +381,6 @@ Robot {
     mass 0.3
   }
   controller "two_wheel_controller"
-  linearVelocity -2.9840696365487573e-09 1.046903676012415e-09 -1.3502868938532314e-08
-  angularVelocity -9.593940964572252e-09 -8.639930939650535e-08 -8.259622522187753e-09
+  linearVelocity -6.509295464672952e-09 1.4369314521928688e-09 -8.862137216662696e-09
+  angularVelocity -1.9806414050887362e-08 -1.7834380165268443e-07 -8.244198938312772e-09
 }
