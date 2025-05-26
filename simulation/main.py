@@ -31,8 +31,7 @@ def main():
     world_path = os.path.join(
         os.path.dirname(os.path.abspath(__file__)),
         '..',
-        'worlds',
-        'pera_robot.wbt'
+        'twowheel.wbt'
     )
     
     # Check if the world file exists
