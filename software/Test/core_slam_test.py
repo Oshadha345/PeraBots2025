@@ -485,3 +485,4 @@ def check_safe_move(new_x_m, new_y_m, env, min_distance_mm):
 
 if __name__ == "__main__":
     main()
+    
