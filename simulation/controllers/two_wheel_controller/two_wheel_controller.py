@@ -12,8 +12,9 @@ import numpy as np
 # Add the src directory to the Python path for adapter imports
 sys.path.append(os.path.join(os.path.dirname(__file__), '..', '..', 'src'))
 # Add software directory to Python path
-sys.path.append(os.path.join(os.path.dirname(__file__), '..', '..', '..', '..', 'software'))
-
+#sys.path.append(os.path.join(os.path.dirname(__file__), '..', '..', '..', '..', 'software'))
+# Corrected path with the right number of parent directories
+sys.path.append(os.path.join(os.path.dirname(__file__), '..', '..', '..', 'software'))
 # Import adapters
 from adapters.webots_lidar_adapter import WebotsLidarAdapter
 from adapters.webots_imu_adapter import WebotsIMUAdapter
