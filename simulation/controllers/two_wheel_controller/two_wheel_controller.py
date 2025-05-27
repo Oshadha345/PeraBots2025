@@ -128,10 +128,28 @@ class TwoWheelController:
         """Initialize sensor fusion filters"""
         # Complementary filter for orientation
         self.comp_filter = ComplementaryFilter(alpha=0.98)
-        
+    
         # Extended Kalman Filter for pose estimation
-        self.ekf = ExtendedKalmanFilter()
-        
+        # For a 2D robot, state vector is [x, y, theta, v, omega]
+        # Measurement vector is [encoder_left, encoder_right, orientation]
+        self.ekf = ExtendedKalmanFilter(dim_x=5, dim_z=3)
+    
+        # Initialize EKF matrices
+        self.ekf.F = np.eye(5)  # State transition matrix (identity to start)
+        self.ekf.H = np.zeros((3, 5))  # Measurement matrix
+    
+        # Set up measurement matrix to extract relevant state variables
+        self.ekf.H[0, 3] = 1.0  # First measurement (left encoder) relates to velocity
+        self.ekf.H[1, 3] = 1.0  # Second measurement (right encoder) relates to velocity
+        elf.ekf.H[2, 2] = 1.0  # Third measurement (IMU) relates to theta
+    
+        # Process and measurement noise
+        self.ekf.R = np.diag([0.1, 0.1, 0.05])  # Measurement noise
+        self.ekf.Q = np.diag([0.01, 0.01, 0.01, 0.05, 0.05])  # Process noise
+    
+        # Initial state covariance
+        self.ekf.P = np.eye(5) * 100  # High initial uncertainty
+    
         # PID controllers for motor control
         self.left_pid = PID(
             kp=self.config.PID_KP, 
@@ -173,24 +191,45 @@ class TwoWheelController:
         lidar_data = self.lidar_adapter.get_scan()
         imu_data = self.imu_adapter.get_data()
         encoder_data = self.encoder_adapter.get_data()
-        
+    
         # Update robot pose estimation using sensor fusion
         accel = imu_data['accel']
         gyro = imu_data['gyro']
         orientation = imu_data['orientation']
-        
+    
         # Use complementary filter for orientation
         filtered_orientation = self.comp_filter.update(accel, gyro, orientation)
-        
-        # Use EKF for position estimation
-        estimated_pose = self.ekf.update(
+    
+        # Step 1: Update the state transition model based on time and current state
+        dt = self.timestep / 1000.0  # Convert to seconds
+        theta = self.ekf.x[2]  # Current heading estimate
+    
+        # Update state transition matrix for non-linear motion
+        self.ekf.F[0, 3] = dt * np.cos(theta)  # x += v*dt*cos(theta)
+        self.ekf.F[1, 3] = dt * np.sin(theta)  # y += v*dt*sin(theta)
+        self.ekf.F[2, 4] = dt                  # theta += omega*dt
+    
+        # Step 2: Perform prediction step (time update)
+        self.ekf.predict()
+    
+        # Step 3: Create measurement vector from sensors
+        z = np.array([
             encoder_data['left_velocity'],
             encoder_data['right_velocity'],
-            filtered_orientation,
-            self.timestep / 1000.0  # Convert to seconds
-        )
-        
-        # Update robot state
+            filtered_orientation[2]  # Yaw/heading
+        ])
+    
+        # Step 4: Perform correction step (measurement update)
+        self.ekf.update(z)
+    
+        # Step 5: Extract the estimated state
+        estimated_pose = [
+            self.ekf.x[0],  # x position
+            self.ekf.x[1],  # y position 
+            self.ekf.x[2]   # theta orientation
+        ]
+    
+        # Update robot state with the new estimates
         self.robot_state.update(
             x=estimated_pose[0],
             y=estimated_pose[1],
@@ -199,7 +238,7 @@ class TwoWheelController:
             angular_velocity=gyro[2],
             lidar_scan=lidar_data
         )
-        
+    
         # Update SLAM
         self.slam.update(
             dxy_mm=encoder_data['distance'] * 1000,  # Convert to mm
