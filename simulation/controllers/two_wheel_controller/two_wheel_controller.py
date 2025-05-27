@@ -151,16 +151,8 @@ class TwoWheelController:
         self.ekf.P = np.eye(5) * 100  # High initial uncertainty
     
         # PID controllers for motor control
-        self.left_pid = PID(
-            kp=self.config.PID_KP, 
-            ki=self.config.PID_KI, 
-            kd=self.config.PID_KD
-        )
-        self.right_pid = PID(
-            kp=self.config.PID_KP, 
-            ki=self.config.PID_KI, 
-            kd=self.config.PID_KD
-        )
+        self.left_pid = PID(self.config.PID_KP, self.config.PID_KI, self.config.PID_KD)
+        self.right_pid = PID(self.config.PID_KP, self.config.PID_KI, self.config.PID_KD)
 
     def _init_slam(self):
         """Initialize SLAM module"""
