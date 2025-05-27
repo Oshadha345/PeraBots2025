@@ -141,7 +141,7 @@ class TwoWheelController:
         # Set up measurement matrix to extract relevant state variables
         self.ekf.H[0, 3] = 1.0  # First measurement (left encoder) relates to velocity
         self.ekf.H[1, 3] = 1.0  # Second measurement (right encoder) relates to velocity
-        elf.ekf.H[2, 2] = 1.0  # Third measurement (IMU) relates to theta
+        self.ekf.H[2, 2] = 1.0  # Third measurement (IMU) relates to theta
     
         # Process and measurement noise
         self.ekf.R = np.diag([0.1, 0.1, 0.05])  # Measurement noise
