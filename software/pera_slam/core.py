@@ -9,16 +9,18 @@ class Position:
         self.x = x
         self.y = y
         self.theta = theta
+        # Add aliases for compatibility
+        self.x_mm = x
+        self.y_mm = y
+        self.theta_degrees = theta
     
     def distance_to(self, other_position):
         """Calculate Euclidean distance to another position"""
         return math.sqrt((self.x - other_position.x)**2 + 
                          (self.y - other_position.y)**2)
     
-    def clone(self):
-        """Create a copy of this position"""
-        return Position(self.x, self.y, self.theta)
-
+    def copy(self):
+        return Position(self.x_mm, self.y_mm, self.theta_degrees)
 
 class CoreSLAM:
     """
