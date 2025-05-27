@@ -1,4 +1,4 @@
-from .core import Position, Scan, CoreSLAM
+from .slamcore import Position, Scan, CoreSLAM
 from .roboviz import Visualizer, MapVisualizer
 from .maps import OccupancyGridMap
 from .sensors import Laser, RPLidarA1, URG04LX, XVLidar, CustomLidar
