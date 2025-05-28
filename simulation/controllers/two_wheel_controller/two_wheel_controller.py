@@ -154,11 +154,12 @@ class TwoWheelController:
         self.left_pid = PID(self.config.PID_KP, self.config.PID_KI, self.config.PID_KD)
         self.right_pid = PID(self.config.PID_KP, self.config.PID_KI, self.config.PID_KD)
 
+   
     def _init_slam(self):
         """Initialize SLAM module"""
         # Create a laser object for the SLAM algorithm
         self.laser = RPLidarA1(offset_mm=self.config.LIDAR_OFFSET_MM)
-        
+    
         # Create SLAM instance
         self.slam = ParticleFilterSLAM(
             laser=self.laser,
@@ -168,6 +169,19 @@ class TwoWheelController:
             hole_width_mm=self.config.HOLE_WIDTH_MM,
             num_particles=self.config.NUM_PARTICLES
         )
+    
+        # Add simple default scan objects
+        class DummyScan:
+            def __init__(self, size):
+                self.size = size
+        
+            def update(self, scans_mm, hole_width_mm, *args, **kwargs):
+                # Minimal implementation that does nothing but prevents errors
+                pass
+    
+        # Create and add the scan objects to the SLAM instance
+        self.slam.scan_for_distance = DummyScan(self.config.MAP_SIZE_PIXELS)
+        self.slam.scan_for_mapbuild = DummyScan(self.config.MAP_SIZE_PIXELS)
 
     def _init_navigation(self):
         """Initialize path planning and following modules"""
