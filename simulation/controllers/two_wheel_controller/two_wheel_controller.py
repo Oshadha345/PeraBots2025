@@ -172,7 +172,7 @@ class TwoWheelController:
     def _init_navigation(self):
         """Initialize path planning and following modules"""
         # Path planning
-        self.path_planner = RRTStar()
+        self.path_planner = None
         
         # Path following
         self.path_follower = PathFollower()
@@ -249,19 +249,21 @@ class TwoWheelController:
         """Plan a path to the target position"""
         # Get current map from SLAM
         obstacle_map = self.slam.get_map()
-        
+    
         # Get current position
         start = (self.robot_state.x, self.robot_state.y)
         goal = (target_x, target_y)
-        
-        # Use RRT* to plan a path
-        self.path = self.path_planner.plan(
-            start=start,
-            goal=goal,
-            obstacle_map=obstacle_map,
-            map_size_meters=self.config.MAP_SIZE_METERS
+    
+        # Create a new RRTStar instance with the current map and positions
+        self.path_planner = RRTStar(
+            map_array=obstacle_map, 
+            start=start, 
+            goal=goal
         )
-        
+    
+        # Plan the path (assuming plan() takes no arguments since they're already provided in constructor)
+        self.path = self.path_planner.plan()
+    
         self.current_path_index = 0
         self.target_position = goal
 
