@@ -183,44 +183,64 @@ class TwoWheelController:
         lidar_data = self.lidar_adapter.get_scan()
         imu_data = self.imu_adapter.get_data()
         encoder_data = self.encoder_adapter.get_data()
-    
+        
         # Update robot pose estimation using sensor fusion
         accel = imu_data['accel']
         gyro = imu_data['gyro']
         orientation = imu_data['orientation']
-    
+        
         # Use complementary filter for orientation
         filtered_orientation = self.comp_filter.update(accel, gyro, orientation)
-    
+        
         # Step 1: Update the state transition model based on time and current state
         dt = self.timestep / 1000.0  # Convert to seconds
-        theta = self.ekf.x[2]  # Current heading estimate
-    
+        theta = float(self.ekf.x[2])  # Extract scalar value to avoid deprecation warning
+        
         # Update state transition matrix for non-linear motion
         self.ekf.F[0, 3] = dt * np.cos(theta)  # x += v*dt*cos(theta)
         self.ekf.F[1, 3] = dt * np.sin(theta)  # y += v*dt*sin(theta)
         self.ekf.F[2, 4] = dt                  # theta += omega*dt
-    
+        
+        # Define measurement function and its Jacobian
+        def Hx(x):
+            """Measurement function - converts state to measurement"""
+            # Measurement vector: [velocity, angular_velocity, orientation]
+            return np.array([
+                x[3],                 # velocity
+                x[4],                 # angular velocity
+                x[2]                  # orientation (theta)
+            ])
+        
+        def HJacobian(x):
+            """Compute Jacobian of the measurement function"""
+            # Jacobian is the derivative of Hx with respect to state variables
+            # For our simple case, it's just a constant matrix
+            H = np.zeros((3, 5))
+            H[0, 3] = 1.0  # d(velocity measurement)/d(velocity state) = 1
+            H[1, 4] = 1.0  # d(angular velocity measurement)/d(angular velocity state) = 1
+            H[2, 2] = 1.0  # d(orientation measurement)/d(orientation state) = 1
+            return H
+        
         # Step 2: Perform prediction step (time update)
         self.ekf.predict()
-    
+        
         # Step 3: Create measurement vector from sensors
         z = np.array([
             encoder_data['left_velocity'],
             encoder_data['right_velocity'],
             filtered_orientation[2]  # Yaw/heading
         ])
-    
-        # Step 4: Perform correction step (measurement update)
-        self.ekf.update(z)
-    
+        
+        # Step 4: Perform correction step (measurement update) with required functions
+        self.ekf.update(z, HJacobian, Hx)
+        
         # Step 5: Extract the estimated state
         estimated_pose = [
             self.ekf.x[0],  # x position
             self.ekf.x[1],  # y position 
             self.ekf.x[2]   # theta orientation
         ]
-    
+        
         # Update robot state with the new estimates
         self.robot_state.update(
             x=estimated_pose[0],
@@ -230,7 +250,7 @@ class TwoWheelController:
             angular_velocity=gyro[2],
             lidar_scan=lidar_data
         )
-    
+        
         # Update SLAM
         self.slam.update(
             dxy_mm=encoder_data['distance'] * 1000,  # Convert to mm
@@ -322,6 +342,16 @@ class TwoWheelController:
 
     def run(self):
         """Main control loop"""
+        print("[INFO] Two Wheel Robot Controller initialized")
+        
+        # Initialize display if available
+        display = None
+        try:
+            display = setup_display(self.robot, 
+                                self.config.DISPLAY_WIDTH, 
+                                self.config.DISPLAY_HEIGHT)
+        except Exception as e:
+            print(f"[WARNING] Display initialization failed: {e}")
         # Main control loop
         while self.robot.step(self.timestep) != -1:
             # Update robot state
