@@ -194,7 +194,7 @@ class TwoWheelController:
         
         # Step 1: Update the state transition model based on time and current state
         dt = self.timestep / 1000.0  # Convert to seconds
-        theta = float(self.ekf.x[2])  # Extract scalar value to avoid deprecation warning
+        theta = float(self.ekf.x[2].item())  # Extract scalar value to avoid deprecation warning
         
         # Update state transition matrix for non-linear motion
         self.ekf.F[0, 3] = dt * np.cos(theta)  # x += v*dt*cos(theta)
@@ -252,11 +252,20 @@ class TwoWheelController:
         )
         
         # Update SLAM
+        dt_seconds = self.timestep / 1000.0  # Get time step in seconds
+
+        # Create the pose_change tuple
+        pose_change = (
+            encoder_data['distance'] * 1000,  # dxy_mm (Convert to mm)
+            math.degrees(encoder_data['dtheta']),  # dtheta_degrees
+            dt_seconds  # dt_seconds
+        )
+
+        # Update SLAM with the correct parameter order
         self.slam.update(
-            dxy_mm=encoder_data['distance'] * 1000,  # Convert to mm
-            dtheta_degrees=math.degrees(encoder_data['dtheta']),
-            scans_mm=lidar_data,
-            scan_angles_degrees=self.lidar_adapter.get_angles()
+            lidar_data,  # scans_mm (first parameter)
+            pose_change,  # pose_change tuple (second parameter)
+            self.lidar_adapter.get_angles()  # scan_angles_degrees (third parameter)
         )
 
     def set_motor_speeds(self, left_speed, right_speed):
