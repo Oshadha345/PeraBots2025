@@ -175,7 +175,7 @@ class TwoWheelController:
         self.path_planner = None
         
         # Path following
-        self.path_follower = PathFollower()
+        self.path_follower = PathFollower(motor_controller=self)
 
     def update_robot_state(self):
         """Update robot state with current sensor readings and estimated pose"""
