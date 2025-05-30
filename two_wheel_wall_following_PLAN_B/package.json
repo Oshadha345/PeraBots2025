@@ -1,0 +1,28 @@
+{
+  "name": "two_wheel_wall_following",
+  "version": "1.0.0",
+  "description": "A project for controlling a two-wheeled robot to follow walls and avoid obstacles.",
+  "main": "src/wall_following_controller.py",
+  "scripts": {
+    "start": "python src/wall_following_controller.py",
+    "test": "echo \"No tests specified\" && exit 0"
+  },
+  "dependencies": {
+    "numpy": "^1.21.0",
+    "matplotlib": "^3.4.0"
+  },
+  "devDependencies": {
+    "typescript": "^4.3.0"
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/yourusername/two_wheel_wall_following.git"
+  },
+  "keywords": [
+    "robotics",
+    "wall-following",
+    "obstacle-avoidance"
+  ],
+  "author": "Your Name",
+  "license": "MIT"
+}
