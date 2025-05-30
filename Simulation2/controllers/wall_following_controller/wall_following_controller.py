@@ -71,7 +71,7 @@ class WallFollowingController:
         )
 
     def follow_wall(self):
-        distances = list(self.lidar_adapter.get_distances())
+        distances = list(self.lidar_adapter.get_scan())
         closest_distance = min(distances)
         closest_index = distances.index(closest_distance)
         
