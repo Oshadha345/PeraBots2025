@@ -36,13 +36,21 @@ class SinglePositionSLAM(CoreSLAM):
         velocities = (dxy_mm_dt, dtheta_degrees_dt)
         
         # Update scans
-        self.scan_for_mapbuild.update(scans_mm, self.hole_width_mm, 
-                                     velocities, scan_angles_degrees)
-        self.scan_for_distance.update(scans_mm, self.hole_width_mm, 
-                                     velocities, scan_angles_degrees)
+        if hasattr(self, 'scan_for_mapbuild'):
+            self.scan_for_mapbuild.update(scans_mm, self.hole_width_mm, 
+                                        velocities, scan_angles_degrees)
+        else:
+            print("[WARNING] scan_for_mapbuild not found")
+            
+        if hasattr(self, 'scan_for_distance'):
+            self.scan_for_distance.update(scans_mm, self.hole_width_mm, 
+                                        velocities, scan_angles_degrees)
+        else:
+            print("[WARNING] scan_for_distance not found")
         
         # Update position and map
         self._update_position_and_map(dxy_mm, dtheta_degrees, should_update_map)
+        
     
     def _update_position_and_map(self, dxy_mm, dtheta_degrees, should_update_map):
         """Update position estimate and map"""

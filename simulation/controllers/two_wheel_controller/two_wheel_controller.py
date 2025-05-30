@@ -200,6 +200,7 @@ class TwoWheelController:
         self.slam.map = MapWrapper(self.slam.map)
         lidar_resolution = self.lidar.getHorizontalResolution() if hasattr(self.lidar, 'getHorizontalResolution') else 100
         self.slam.scan_for_mapbuild = DummyScan(lidar_resolution)
+        self.slam.scan_for_distance = DummyScan(lidar_resolution)
         
 
     def _init_navigation(self):
