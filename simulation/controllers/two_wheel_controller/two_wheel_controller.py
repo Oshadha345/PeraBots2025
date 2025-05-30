@@ -182,16 +182,17 @@ class TwoWheelController:
         self.slam.scan_for_distance = DummyScan(self.config.MAP_SIZE_PIXELS)
         self.slam.scan_for_mapbuild = DummyScan(self.config.MAP_SIZE_PIXELS)
         
-    # Create a Map wrapper class for the SLAM map
-    class MapWrapper:
-        def __init__(self, map_array):
-            self.map_array = map_array
+        # Create a Map wrapper class for the SLAM map
+        class MapWrapper:
+            def __init__(self, map_array):
+                self.map_array = map_array
             
-        def get_map(self):
-            return self.map_array
+            def get_map(self):
+                return self.map_array
     
-    # Replace the NumPy array with the wrapper object
-    self.slam.map = MapWrapper(self.slam.map)
+        # Replace the NumPy array with the wrapper object
+        self.slam.map = MapWrapper(self.slam.map)
+
     def _init_navigation(self):
         """Initialize path planning and following modules"""
         # Path planning
