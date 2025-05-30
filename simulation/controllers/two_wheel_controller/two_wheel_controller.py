@@ -377,7 +377,7 @@ class TwoWheelController:
         self.path = self.path_planner.plan()
     
         self.current_path_index = 0
-        self.target_position = goal
+        self.target_position = (goal_x, goal_y)
 
     def follow_path(self):
         """Follow the planned path"""
