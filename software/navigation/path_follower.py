@@ -46,27 +46,46 @@ class PathFollower:
         self.y = y
         self.heading = heading
         
-    def follow_path(self, path: List[Tuple[float, float]]):
-        """
-        Set a new path to follow.
-        
-        Args:
-            path: List of (x, y) waypoints to follow
-        """
-        if len(path) < 2:
-            print("Path too short, need at least 2 points")
+    def follow_path(self):
+        """Follow the planned path"""
+        if not self.path or self.current_path_index >= len(self.path):
+            # No path or at the end of the path
+            self.set_motor_speeds(0, 0)
             return
+        
+        # Get next waypoint
+        waypoint = self.path[self.current_path_index]
+        
+        # Get current position and convert to scalar values
+        current_pos = self.get_position()
+        current_x = float(current_pos[0]) if hasattr(current_pos[0], 'shape') else float(current_pos[0])
+        current_y = float(current_pos[1]) if hasattr(current_pos[1], 'shape') else float(current_pos[1])
+        current_theta = float(current_pos[2]) if hasattr(current_pos[2], 'shape') else float(current_pos[2])
+        
+        # Ensure waypoint coordinates are scalar values
+        waypoint_x = float(waypoint[0]) if hasattr(waypoint[0], 'shape') else float(waypoint[0])
+        waypoint_y = float(waypoint[1]) if hasattr(waypoint[1], 'shape') else float(waypoint[1])
+        
+        # Calculate distance to waypoint using scalar values
+        distance_to_waypoint = math.sqrt(
+            (waypoint_x - current_x)**2 + (waypoint_y - current_y)**2
+        )
+        
+        # Use path follower to get velocity commands
+        linear_vel, angular_vel = self.path_follower.compute_velocity(
+            current_x, current_y, current_theta, 
+            waypoint_x, waypoint_y
+        )
+        
+        # Set motor speeds based on computed velocities
+        left_speed, right_speed = self.velocities_to_motor_commands(linear_vel, angular_vel)
+        self.set_motor_speeds(left_speed, right_speed)
+        
+        # Check if we've reached the current waypoint (within tolerance)
+        if distance_to_waypoint < 0.1:  # 10cm tolerance
+            self.current_path_index += 1
+            print(f"Reached waypoint {self.current_path_index-1}, moving to next waypoint")
             
-        # Smooth the path
-        path_smoother = PathSmooth(path)
-        self.current_path = path_smoother.smooth(method="shortcut")
-        
-        # Configure the pure pursuit controller
-        self.pure_pursuit.set_path(self.current_path)
-        self.is_following_path = True
-        
-        print(f"Starting to follow path with {len(self.current_path)} points")
-        
     def update(self, x: float, y: float, heading: float, dt: float):
         """
         Update the path follower with the current robot pose.
@@ -172,30 +191,3 @@ class PathFollower:
         self.motor_controller.set_motor_speeds(0, 0)
         self.is_following_path = False
         print("Path following complete")
-    def follow_path(self):
-        """Follow the planned path"""
-        if not self.path or self.current_path_index >= len(self.path):
-            # No path or at the end of the path
-            self.set_motor_speeds(0, 0)
-            return
-        
-        # Get next waypoint
-        waypoint = self.path[self.current_path_index]
-        
-        # Get current position - ensure these are scalar values
-        current_pos = self.get_position()
-        current_x = float(current_pos[0]) if hasattr(current_pos[0], 'shape') else float(current_pos[0])
-        current_y = float(current_pos[1]) if hasattr(current_pos[1], 'shape') else float(current_pos[1])
-        current_theta = float(current_pos[2]) if hasattr(current_pos[2], 'shape') else float(current_pos[2])
-        
-        # Ensure waypoint coordinates are scalar values
-        waypoint_x = float(waypoint[0]) if hasattr(waypoint[0], 'shape') else float(waypoint[0])
-        waypoint_y = float(waypoint[1]) if hasattr(waypoint[1], 'shape') else float(waypoint[1])
-        
-        # Calculate distance to waypoint using scalar values
-        distance_to_waypoint = math.sqrt(
-            (waypoint_x - current_x)**2 + (waypoint_y - current_y)**2
-        )
-        
-        # Rest of your follow_path implementation
-        # ...
