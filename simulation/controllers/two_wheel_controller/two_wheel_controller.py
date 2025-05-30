@@ -193,13 +193,35 @@ class TwoWheelController:
         
         class MapWrapper:
             def __init__(self, map_array):
-                # Initialize with valid 2D numpy array
-                if map_array is None or not isinstance(map_array, np.ndarray):
-                    print("[WARNING] Invalid map provided, creating empty map")
-                    self.map_array = np.zeros((100, 100), dtype=np.uint8)
-                else:
-                    self.map_array = map_array
+                # Existing initialization code...
+                self.map_array = map_array
+                # Add map parameters
+                self.map_size_pixels = 100  # Size in pixels (same as your initialized 100x100 array)
+                self.map_size_meters = 10   # Size in meters (from your SLAM initialization)
             
+            # Existing methods...
+            
+            def world_to_map(self, world_x_mm, world_y_mm):
+                """Convert world coordinates (mm) to map pixel coordinates"""
+                # Convert mm to meters first
+                world_x_m = world_x_mm / 1000.0
+                world_y_m = world_y_mm / 1000.0
+                
+                # Calculate scaling factor
+                scale = self.map_size_pixels / self.map_size_meters
+                
+                # Convert to pixel coordinates
+                # Center the origin in the middle of the map
+                map_center = self.map_size_pixels / 2
+                pixel_x = int(map_center + (world_x_m * scale))
+                pixel_y = int(map_center - (world_y_m * scale))  # Y is flipped in image coordinates
+                
+                # Ensure within map bounds
+                pixel_x = max(0, min(self.map_size_pixels-1, pixel_x))
+                pixel_y = max(0, min(self.map_size_pixels-1, pixel_y))
+                
+                return pixel_x, pixel_y
+                
             def get_map(self):
                 """Return the map as a 2D numpy array"""
                 # Ensure returned map is always a valid 2D numpy array
