@@ -23,10 +23,12 @@ class WallFollowingController:
     def __init__(self):
         self.robot = Robot()
         self.config = SimulationConfig()
+        self.timestep = int(self.robot.getBasicTimeStep())
         self.config.LIDAR_TIMESTEP = int(self.robot.getBasicTimeStep())
+        self.config.TIMESTEP = self.timestep
         self.config.WALL_DISTANCE_THRESHOLD = 0.5  # Default distance in meters
         self.config.DEFAULT_SPEED = 5.0  # Default speed in rad/s
-        self.timestep = int(self.robot.getBasicTimeStep())
+        
         
         self.lidar_adapter = WebotsLidarAdapter(self.robot.getDevice('lidar'), self.config)
         self.imu_adapter = WebotsIMUAdapter(self.robot.getDevice('inertial_unit'), 
