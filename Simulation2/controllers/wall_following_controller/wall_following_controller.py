@@ -2,9 +2,15 @@
 Wall Following Controller for Two-Wheeled Robot
 This controller allows the robot to follow the inner wall while avoiding obstacles.
 """
-
 from controller import Robot
+import sys
+import os
 import numpy as np
+
+# Add the src directory to the Python path for adapter imports
+sys.path.append(os.path.join(os.path.dirname(__file__), '..', '..', 'src'))
+# Add software directory to Python path
+sys.path.append(os.path.join(os.path.dirname(__file__), '..', '..', '..', 'software'))
 from adapters.webots_lidar_adapter import WebotsLidarAdapter
 from adapters.webots_imu_adapter import WebotsIMUAdapter
 from adapters.webots_encoder_adapter import WebotsEncoderAdapter
