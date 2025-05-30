@@ -198,6 +198,7 @@ class TwoWheelController:
     
         # Replace the NumPy array with the wrapper object
         self.slam.map = MapWrapper(self.slam.map)
+        lidar_resolution = self.lidar.getHorizontalResolution() if hasattr(self.lidar, 'getHorizontalResolution') else 100
         self.slam.scan_for_mapbuild = DummyScan(self.lidar_adapter.get_horizontal_resolution())
         
 
