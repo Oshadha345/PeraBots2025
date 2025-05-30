@@ -338,22 +338,23 @@ class TwoWheelController:
         self.left_motor.setVelocity(left_speed)
         self.right_motor.setVelocity(right_speed)
 
-    def plan_path(self, target_x, target_y):
-        """Plan a path to the target position"""
-        # Get current map from SLAM
-        obstacle_map = self.slam.get_map()
-    
+    def plan_path(self, goal_x, goal_y):
         # Get current position
-        start = (self.robot_state.x, self.robot_state.y)
-        goal = (target_x, target_y)
+        current_x, current_y = self.get_position()[:2]  # Extract just x, y
     
-        # Create a new RRTStar instance with the current map and positions
+        # Create occupancy grid from SLAM map
+        occupancy_grid = self.slam.map.get_map()  # Assuming this returns a 2D numpy array
+    
+        # Initialize path planner
         self.path_planner = RRTStar(
-            map_array=obstacle_map, 
-            start=start, 
-            goal=goal
+            map_array=occupancy_grid,
+            start=(current_x, current_y),  # Make sure these are simple tuples or values
+            goal=(goal_x, goal_y),
+            max_iterations=1000,
+            step_size=0.1,
+            search_radius=0.5
         )
-    
+
         # Plan the path (assuming plan() takes no arguments since they're already provided in constructor)
         self.path = self.path_planner.plan()
     
