@@ -192,9 +192,30 @@ class TwoWheelController:
         class MapWrapper:
             def __init__(self, map_array):
                 self.map_array = map_array
+                   
             
             def get_map(self):
-                return self.map_array
+                # Convert map_array to a simple 2D numpy array if it isn't already
+                if isinstance(self.map_array, np.ndarray):
+                    # Make sure it's a 2D array
+                    if len(self.map_array.shape) != 2:
+                        # If it's not 2D, try to convert it
+                        try:
+                            return np.array(self.map_array).reshape((-1, self.map_array.shape[0]))
+                        except:
+                            # If conversion fails, return a default empty map
+                            print("[WARNING] Could not convert map to 2D array, returning empty map")
+                            return np.zeros((100, 100))
+                    return self.map_array
+                else:
+                    # If it's not a numpy array, try to convert it
+                    try:
+                        return np.array(self.map_array)
+                    except:
+                        # If conversion fails, return a default empty map
+                        print("[WARNING] Could not convert map to numpy array, returning empty map")
+                        return np.zeros((100, 100))
+            
             def update(self, scan, new_position, should_update=True,*args,**kwargs):
                 # Placeholder for map update functionality
                 # In a real implementation, this would update the map based on the scan
