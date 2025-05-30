@@ -115,6 +115,12 @@ class PathFollower:
         Returns:
             (linear_vel, angular_vel): Velocity commands
         """
+        # Convert potential NumPy arrays to scalar values
+        robot_x = float(robot_x[0]) if hasattr(robot_x, 'shape') and robot_x.shape else float(robot_x)
+        robot_y = float(robot_y[0]) if hasattr(robot_y, 'shape') and robot_y.shape else float(robot_y)
+        robot_theta = float(robot_theta[0]) if hasattr(robot_theta, 'shape') and robot_theta.shape else float(robot_theta)
+        target_x = float(target_x[0]) if hasattr(target_x, 'shape') and target_x.shape else float(target_x)
+        target_y = float(target_y[0]) if hasattr(target_y, 'shape') and target_y.shape else float(target_y)
         # Calculate distance and angle to target
         dx = target_x - robot_x
         dy = target_y - robot_y
