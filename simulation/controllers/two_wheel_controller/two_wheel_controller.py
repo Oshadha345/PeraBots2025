@@ -173,15 +173,21 @@ class TwoWheelController:
         class DummyScan:
             def __init__(self, size):
                 self.size = size
-        
-            def update(self, scans_mm, hole_width_mm, *args, **kwargs):
-                # Minimal implementation that does nothing but prevents errors
-                pass
+        # Add the missing attributes
+                self.distances_mm = np.ones(100) * 1000  # Example distance values (100 points at 1000mm)
+                self.angles_rad = np.linspace(0, 2*np.pi, 100)  # Example angle values (full circle)
+                self.xs_mm = np.cos(self.angles_rad) * self.distances_mm  # x coordinates
+                self.ys_mm = np.sin(self.angles_rad) * self.distances_mm  # y coordinates
     
-        # Create and add the scan objects to the SLAM instance
-        self.slam.scan_for_distance = DummyScan(self.config.MAP_SIZE_PIXELS)
-        self.slam.scan_for_mapbuild = DummyScan(self.config.MAP_SIZE_PIXELS)
-        
+            def update(self, scans_mm, hole_width_mm, *args, **kwargs):
+                # Store the scans properly to update distances
+                if scans_mm is not None and len(scans_mm) > 0:
+                    self.distances_mm = np.array(scans_mm)
+                    #  Update xs and ys if angles_rad exists
+                    if hasattr(self, 'angles_rad') and len(self.angles_rad) == len(scans_mm):
+                        self.xs_mm = np.cos(self.angles_rad) * self.distances_mm
+                        self.ys_mm = np.sin(self.angles_rad) * self.distances_mm
+                return self.distances_mm
         # Create a Map wrapper class for the SLAM map
         class MapWrapper:
             def __init__(self, map_array):
