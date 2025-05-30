@@ -338,14 +338,24 @@ class TwoWheelController:
         self.left_motor.setVelocity(left_speed)
         self.right_motor.setVelocity(right_speed)
 
+    
     def get_position(self):
         """Get the current position of the robot (x, y, theta)"""
         # Extract scalar values from any potential NumPy arrays
-        x = float(self.robot_state.x.item()) if hasattr(self.robot_state.x, 'item') else float(self.robot_state.x)
-        y = float(self.robot_state.y.item()) if hasattr(self.robot_state.y, 'item') else float(self.robot_state.y)
-        theta = float(self.robot_state.theta.item()) if hasattr(self.robot_state.theta, 'item') else float(self.robot_state.theta)
+        if hasattr(self.robot_state.x, 'shape'):
+            # Handle arrays of any size
+            x = float(self.robot_state.x[0]) if len(self.robot_state.x.shape) > 0 else float(self.robot_state.x)
+            y = float(self.robot_state.y[0]) if len(self.robot_state.y.shape) > 0 else float(self.robot_state.y)
+            theta = float(self.robot_state.theta[0]) if len(self.robot_state.theta.shape) > 0 else float(self.robot_state.theta)
+        else:
+            # Not a NumPy array
+            x = float(self.robot_state.x)
+            y = float(self.robot_state.y)
+            theta = float(self.robot_state.theta)
+        
         return (x, y, theta)
-
+            
+    
     def plan_path(self, goal_x, goal_y):
         # Get current position
         current_x, current_y = self.get_position()[:2]  # Extract just x, y
