@@ -1,0 +1,386 @@
+#VRML_SIM R2025a utf8
+
+EXTERNPROTO "https://raw.githubusercontent.com/cyberbotics/webots/R2025a/projects/objects/backgrounds/protos/TexturedBackground.proto"
+EXTERNPROTO "https://raw.githubusercontent.com/cyberbotics/webots/R2025a/projects/objects/backgrounds/protos/TexturedBackgroundLight.proto"
+EXTERNPROTO "https://raw.githubusercontent.com/cyberbotics/webots/R2025a/projects/objects/floors/protos/RectangleArena.proto"
+
+WorldInfo {
+}
+Viewpoint {
+  orientation 0.31063873544537396 -0.6009155471314888 -0.7364808763685331 5.059164408709177
+  position -0.6977207103299642 -1.417718578384647 0.9433249571512239
+}
+TexturedBackground {
+}
+TexturedBackgroundLight {
+}
+RectangleArena {
+  floorSize 2 2
+  floorAppearance PBRAppearance {
+    roughness 1
+    roughnessMap ImageTexture {
+      url [
+        "https://raw.githubusercontent.com/cyberbotics/webots/R2023b/projects/appearances/protos/textures/parquetry/mosaic_parquetry_roughness.jpg"
+      ]
+    }
+    metalness 0
+    normalMap ImageTexture {
+      url [
+        "https://raw.githubusercontent.com/cyberbotics/webots/R2023b/projects/appearances/protos/textures/parquetry/mosaic_parquetry_normal.jpg"
+      ]
+    }
+    occlusionMap ImageTexture {
+      url [
+        "https://raw.githubusercontent.com/cyberbotics/webots/R2023b/projects/appearances/protos/textures/parquetry/mosaic_parquetry_occlusion.jpg"
+      ]
+    }
+  }
+}
+Solid {
+  translation 0.45 -0.73 0.05
+  rotation 0 0 -1 -0.13090030610042527
+  children [
+    DEF obstacle1 Shape {
+      appearance PBRAppearance {
+        baseColor 0 0 0
+        roughness 1
+        metalness 0
+      }
+      geometry Box {
+        size 0.1 0.1 0.1
+      }
+    }
+  ]
+  boundingObject USE obstacle1
+  locked TRUE
+}
+Solid {
+  translation 0.666748 -0.198009 0.05
+  rotation 0 0 -1 -1.3089953071795861
+  children [
+    DEF obstacle2 Shape {
+      appearance PBRAppearance {
+        baseColor 0 0 0
+        roughness 1
+        metalness 0
+      }
+      geometry Box {
+        size 0.2 0.1 0.1
+      }
+    }
+  ]
+  name "solid(1)"
+  boundingObject USE obstacle2
+  locked TRUE
+}
+Solid {
+  translation 0.36358 0.381911 0.05
+  rotation 0 0 -1 -1.047195307179586
+  children [
+    DEF obstacle3 Shape {
+      appearance PBRAppearance {
+        baseColor 0 0 0
+        roughness 1
+        metalness 0
+      }
+      geometry Box {
+        size 0.12 0.1 0.1
+      }
+    }
+  ]
+  name "solid(3)"
+  boundingObject USE obstacle3
+  locked TRUE
+}
+Solid {
+  translation -0.380764 0.661551 0.05
+  rotation 0 0 1 2.09439
+  children [
+    DEF obstacle4 Shape {
+      appearance PBRAppearance {
+        baseColor 0 0 0
+        roughness 1
+        metalness 0
+      }
+      geometry Box {
+        size 0.12 0.1 0.1
+      }
+    }
+  ]
+  name "solid(4)"
+  boundingObject USE obstacle4
+  locked TRUE
+}
+Solid {
+  translation -0.545793 -0.0756207 0.05
+  rotation 0 0 1 1.83259
+  children [
+    DEF obstacle5 Shape {
+      appearance PBRAppearance {
+        baseColor 0 0 0
+        roughness 1
+        metalness 0
+      }
+      geometry Box {
+        size 0.1 0.3 0.1
+      }
+    }
+  ]
+  name "solid(5)"
+  boundingObject USE obstacle5
+  locked TRUE
+}
+Solid {
+  translation -0.356546 -0.527723 0
+  rotation 0 0 1 2.8797896938995744
+  children [
+    Shape {
+      appearance PBRAppearance {
+        baseColor 1 0 0
+        roughness 1
+        metalness 0
+      }
+      geometry Box {
+        size 0.03 0.51 0.0005
+      }
+    }
+  ]
+  name "solid(6)"
+  locked TRUE
+}
+Solid {
+  children [
+    Shape {
+      appearance PBRAppearance {
+        baseColor 0 0 0
+        roughness 1
+        metalness 0
+      }
+      geometry Mesh {
+        url [
+          "../path/outer_path.obj"
+        ]
+      }
+    }
+  ]
+  name "solid(2)"
+  boundingObject Mesh {
+    url [
+      "../path/outer_path.obj"
+    ]
+  }
+  locked TRUE
+}
+Solid {
+  children [
+    Shape {
+      appearance PBRAppearance {
+        baseColor 0 0 0
+        roughness 1
+        metalness 0
+      }
+      geometry Mesh {
+        url [
+          "../path/inner_path.obj"
+        ]
+      }
+    }
+  ]
+  name "solid(7)"
+  boundingObject Mesh {
+    url [
+      "../path/inner_path.obj"
+    ]
+  }
+  locked TRUE
+}
+Robot {
+  translation -0.11005353278655677 -0.5142098214849037 0.038287406129873885
+  rotation -0.5293453710201886 0.5913889531382115 0.6083194755106804 -2.1443716426807935
+  children [
+    Gyro {
+      translation 0.02 0.02 0.03
+      children [
+        Shape {
+          appearance PBRAppearance {
+          }
+          geometry Box {
+            size 0.01 0.01 0.01
+          }
+        }
+      ]
+    }
+    Accelerometer {
+      translation 0 0.04 -0.05
+      children [
+        Shape {
+          appearance PBRAppearance {
+            baseColor 0 1 0.7
+          }
+          geometry Box {
+            size 0.05 0.05 0.05
+          }
+        }
+      ]
+    }
+    InertialUnit {
+      translation -0.03 0.02 0
+      children [
+        Shape {
+          appearance PBRAppearance {
+            metalness 0
+          }
+          geometry Box {
+            size 0.01 0.01 0.01
+          }
+        }
+      ]
+      name "inertial_unit"
+    }
+    Lidar {
+      translation 2.67257e-05 0.0299963 0.000272275
+      rotation 0.5030470370970558 0.6020562948954822 0.6200579781315597 -2.19
+      name "lidar(1)"
+      type "rotating"
+    }
+    Pose {
+      children [
+        DEF body Shape {
+          appearance PBRAppearance {
+            baseColor 0.5 0.6 1
+          }
+          geometry Box {
+            size 0.1 0.04 0.16
+          }
+        }
+      ]
+    }
+    Pose {
+      translation 0 0 0.08
+      children [
+        Lidar {
+          translation 0 0 0.08
+          rotation 0 1 0 0
+          horizontalResolution 1
+          fieldOfView 6.28319
+          numberOfLayers 1
+          maxRange 5
+          type "rotating"
+          noise 0.01
+          resolution 512
+        }
+        Shape {
+          appearance PBRAppearance {
+            baseColor 0.8 0.8 0.8
+          }
+          geometry Cylinder {
+            height 0.02
+            radius 0.02
+          }
+        }
+      ]
+    }
+    HingeJoint {
+      jointParameters HingeJointParameters {
+        position 33.40538725587421
+        anchor 0.0598 -0.017 -0.05
+      }
+      device [
+        RotationalMotor {
+          name "left_wheel_motor"
+          maxTorque 0.1
+        }
+        PositionSensor {
+          name "left_wheel_sensor"
+          resolution 0.01
+        }
+      ]
+      endPoint Solid {
+        translation 0.059800001312102835 -0.016983315579684657 -0.049999527043612366
+        rotation 0.6425687610497125 -0.4173866512319806 -0.6425681058816958 2.3507830470751374
+        children [
+          DEF wheel Shape {
+            appearance PBRAppearance {
+              baseColor 1 0 0
+              roughness 1
+              metalness 0
+            }
+            geometry Cylinder {
+              height 0.02
+              radius 0.02
+            }
+          }
+        ]
+        boundingObject USE wheel
+        physics Physics {
+          mass 0.05
+        }
+        linearVelocity -3.764528804698567e-09 7.207589333333353e-10 9.248410748340676e-09
+        angularVelocity -1.980744805334492e-08 -1.7835300241419185e-07 -8.244227038209294e-09
+      }
+    }
+    HingeJoint {
+      jointParameters HingeJointParameters {
+        position 21.34217966127891
+        anchor -0.0598 -0.017 -0.05
+      }
+      device [
+        RotationalMotor {
+          name "right_wheel_motor"
+          maxTorque 0.1
+        }
+        PositionSensor {
+          name "right_wheel_sensor"
+          resolution 0.01
+        }
+      ]
+      endPoint Solid {
+        translation -0.05979999861182306 -0.016983315974136704 -0.049999522749666236
+        rotation 0.6879158968048671 -0.23139663537758112 -0.687915195397725 2.686803309652948
+        children [
+          USE wheel
+        ]
+        boundingObject USE wheel
+        physics Physics {
+          mass 0.05
+        }
+        linearVelocity -2.7879158547799227e-09 6.122939724033801e-10 9.248308856513622e-09
+        angularVelocity -1.980310918882316e-08 -1.7831397279710805e-07 -8.244227128650935e-09
+      }
+    }
+    BallJoint {
+      jointParameters BallJointParameters {
+        position -37.28492822583285
+        anchor 0 -0.03 0.05
+      }
+      endPoint Solid {
+        translation 8.244958502601207e-07 -0.029949232210088814 0.050002142958611405
+        rotation -0.5798260172784835 -0.5189245050563752 0.6281075924863256 -1.2991836467546483
+        children [
+          DEF caster Shape {
+            appearance PBRAppearance {
+              baseColor 0 0 0
+              roughness 1
+              metalness 0
+            }
+            geometry Sphere {
+              radius 0.01
+            }
+          }
+        ]
+        boundingObject USE caster
+        physics Physics {
+        }
+        linearVelocity -1.3660006562675804e-09 1.3002670425598497e-09 -7.078642499079774e-12
+        angularVelocity -2.381929914368231e-07 -2.0402251214280592e-08 7.206692729936952e-11
+      }
+    }
+  ]
+  boundingObject USE body
+  physics Physics {
+    mass 0.3
+  }
+  controller "two_wheel_controller"
+  linearVelocity -6.509295464672952e-09 1.4369314521928688e-09 -8.862137216662696e-09
+  angularVelocity -1.9806414050887362e-08 -1.7834380165268443e-07 -8.244198938312772e-09
+}
