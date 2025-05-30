@@ -389,29 +389,34 @@ class TwoWheelController:
         # Get next waypoint
         waypoint = self.path[self.current_path_index]
         
-        # Calculate control outputs using the path follower
-        linear_vel, angular_vel = self.path_follower.compute_velocity(
-            self.robot_state.x,
-            self.robot_state.y,
-            self.robot_state.theta,
-            waypoint[0],
-            waypoint[1]
+        # Get current position and convert to scalar values
+        current_pos = self.get_position()
+        current_x = float(current_pos[0]) if hasattr(current_pos[0], 'shape') else float(current_pos[0])
+        current_y = float(current_pos[1]) if hasattr(current_pos[1], 'shape') else float(current_pos[1])
+        current_theta = float(current_pos[2]) if hasattr(current_pos[2], 'shape') else float(current_pos[2])
+        
+        # Ensure waypoint coordinates are scalar values
+        waypoint_x = float(waypoint[0]) if hasattr(waypoint[0], 'shape') else float(waypoint[0])
+        waypoint_y = float(waypoint[1]) if hasattr(waypoint[1], 'shape') else float(waypoint[1])
+        
+        # Calculate distance to waypoint using scalar values
+        distance_to_waypoint = math.sqrt(
+            (waypoint_x - current_x)**2 + (waypoint_y - current_y)**2
         )
         
-        # Convert to wheel velocities
-        left_speed, right_speed = self.convert_to_wheel_speeds(linear_vel, angular_vel)
+        # Calculate control outputs
+        linear_vel, angular_vel = self.path_follower.compute_velocity(
+            current_x, current_y, current_theta,
+            waypoint_x, waypoint_y
+        )
         
         # Set motor speeds
-        self.set_motor_speeds(left_speed, right_speed)
+        self.set_motor_speeds(linear_vel, angular_vel)
         
-        # Check if we've reached the current waypoint
-        distance_to_waypoint = math.sqrt(
-            (self.robot_state.x - waypoint[0])**2 + 
-            (self.robot_state.y - waypoint[1])**2
-        )
-        
-        if distance_to_waypoint < self.config.WAYPOINT_THRESHOLD:
+        # Check if we've reached the waypoint
+        if distance_to_waypoint < 0.1:  # 10cm tolerance
             self.current_path_index += 1
+            print(f"Reached waypoint {self.current_path_index-1}, moving to next waypoint")
 
     def convert_to_wheel_speeds(self, linear_vel, angular_vel):
         """Convert linear and angular velocity to wheel speeds"""
