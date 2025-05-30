@@ -340,9 +340,12 @@ class TwoWheelController:
 
     def get_position(self):
         """Get the current position of the robot (x, y, theta)"""
-        # Return position from robot_state which is already being updated
-        return (self.robot_state.x, self.robot_state.y, self.robot_state.theta)
-    
+        # Extract scalar values from any potential NumPy arrays
+        x = float(self.robot_state.x.item()) if hasattr(self.robot_state.x, 'item') else float(self.robot_state.x)
+        y = float(self.robot_state.y.item()) if hasattr(self.robot_state.y, 'item') else float(self.robot_state.y)
+        theta = float(self.robot_state.theta.item()) if hasattr(self.robot_state.theta, 'item') else float(self.robot_state.theta)
+        return (x, y, theta)
+
     def plan_path(self, goal_x, goal_y):
         # Get current position
         current_x, current_y = self.get_position()[:2]  # Extract just x, y
