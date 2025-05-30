@@ -185,15 +185,18 @@ class TwoWheelController:
             hole_width_mm=self.config.HOLE_WIDTH_MM,
             num_particles=self.config.NUM_PARTICLES
         )
-    
-        # Add simple default scan objects
+
         class DummyScan:
-            def __init__(self, size):
-                self.size = size
+                def __init__(self, size):
+                    self.size = size
+                    # Add distances_mm attribute with default values
+                    self.distances_mm = np.ones(size) * 1000  # Default 1000mm (1m) distance
+            
+                def update(self, scans_mm, hole_width_mm, *args, **kwargs):
+                    # Minimal implementation that updates distances_mm
+                    if scans_mm is not None and len(scans_mm) > 0:
+                        self.distances_mm = np.array(scans_mm)
         
-            def update(self, scans_mm, hole_width_mm, *args, **kwargs):
-                # Minimal implementation that does nothing but prevents errors
-                pass
     
         # Create and add the scan objects to the SLAM instance
         self.slam.scan_for_distance = DummyScan(self.config.MAP_SIZE_PIXELS)
