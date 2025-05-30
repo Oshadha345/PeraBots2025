@@ -195,6 +195,15 @@ class TwoWheelController:
             
             def get_map(self):
                 return self.map_array
+            def update(self, scan, new_position, should_update=True):
+                # Placeholder for map update functionality
+                # In a real implementation, this would update the map based on the scan
+                if not should_update:
+                    return
+                
+                # Just to avoid errors - not actually updating the map
+                print("[INFO] Map update called (placeholder)")
+                return
     
         # Replace the NumPy array with the wrapper object
         self.slam.map = MapWrapper(self.slam.map)
