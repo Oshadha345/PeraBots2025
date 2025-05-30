@@ -71,17 +71,16 @@ class PathFollower:
             (waypoint_x - current_x)**2 + (waypoint_y - current_y)**2
         )
         
-        # Use path follower to get velocity commands
+        # Calculate control outputs
         linear_vel, angular_vel = self.path_follower.compute_velocity(
-            current_x, current_y, current_theta, 
+            current_x, current_y, current_theta,
             waypoint_x, waypoint_y
         )
         
-        # Set motor speeds based on computed velocities
-        left_speed, right_speed = self.velocities_to_motor_commands(linear_vel, angular_vel)
-        self.set_motor_speeds(left_speed, right_speed)
+        # Set motor speeds
+        self.set_motor_speeds(linear_vel, angular_vel)
         
-        # Check if we've reached the current waypoint (within tolerance)
+        # Check if we've reached the waypoint
         if distance_to_waypoint < 0.1:  # 10cm tolerance
             self.current_path_index += 1
             print(f"Reached waypoint {self.current_path_index-1}, moving to next waypoint")
