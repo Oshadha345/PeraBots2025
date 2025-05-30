@@ -29,15 +29,18 @@ class WallFollowingController:
         self.config.WALL_DISTANCE_THRESHOLD = 0.5  # Default distance in meters
         self.config.DEFAULT_SPEED = 5.0  # Default speed in rad/s
         
-        
+        self.left_wheel_sensor = self.robot.getDevice('left_wheel_sensor')
+        self.right_wheel_sensor = self.robot.getDevice('right_wheel_sensor')
+        self.left_wheel_sensor.enable(self.timestep)
+        self.right_wheel_sensor.enable(self.timestep)
         self.lidar_adapter = WebotsLidarAdapter(self.robot.getDevice('lidar'), self.config)
         self.imu_adapter = WebotsIMUAdapter(self.robot.getDevice('inertial_unit'), 
                                              self.robot.getDevice('accelerometer'), 
                                              self.robot.getDevice('gyro'), 
                                              self.config)
         self.encoder_adapter = WebotsEncoderAdapter(
-            self.robot.getDevice('left_wheel_sensor'), 
-            self.robot.getDevice('right_wheel_sensor'), 
+            self.left_wheel_sensor, 
+            self.right_wheel_sensor, 
             self.config.WHEEL_RADIUS, 
             self.config.WHEEL_DISTANCE
         )
