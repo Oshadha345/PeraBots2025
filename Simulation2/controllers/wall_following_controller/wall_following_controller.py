@@ -64,7 +64,7 @@ class WallFollowingController:
         self.robot_state.update(
             x=self.robot_state.x,
             y=self.robot_state.y,
-            theta=filtered_orientation[2],
+            theta=filtered_orientation,
             velocity=encoder_data['velocity'],
             angular_velocity=gyro[2],
             lidar_scan=lidar_data
