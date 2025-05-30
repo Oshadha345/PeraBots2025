@@ -189,89 +189,108 @@ class TwoWheelController:
     
 
     def _init_slam(self):
-        """Initialize SLAM components"""
-
+        """Initialize SLAM components for localization and mapping"""
+        
         class MapWrapper:
-                def __init__(self, map_array):
+            def __init__(self, map_array):
+                # Initialize with valid 2D numpy array
+                if map_array is None or not isinstance(map_array, np.ndarray):
+                    print("[WARNING] Invalid map provided, creating empty map")
+                    self.map_array = np.zeros((100, 100), dtype=np.uint8)
+                else:
                     self.map_array = map_array
-                    
-                
-                def get_map(self):
-                    # Convert map_array to a simple 2D numpy array if it isn't already
-                    if isinstance(self.map_array, np.ndarray):
-                        # Make sure it's a 2D array
-                        if len(self.map_array.shape) != 2:
-                            # If it's not 2D, try to convert it
-                            try:
-                                return np.array(self.map_array).reshape((-1, self.map_array.shape[0]))
-                            except:
-                                # If conversion fails, return a default empty map
-                                print("[WARNING] Could not convert map to 2D array, returning empty map")
-                                return np.zeros((100, 100))
-                        return self.map_array
-                    else:
-                        # If it's not a numpy array, try to convert it
-                        try:
-                            return np.array(self.map_array)
-                        except:
-                            # If conversion fails, return a default empty map
-                            print("[WARNING] Could not convert map to numpy array, returning empty map")
-                            return np.zeros((100, 100))
-                
-                def update(self, scan, new_position, should_update=True,*args,**kwargs):
-                    # Placeholder for map update functionality
-                    # In a real implementation, this would update the map based on the scan
-                    if not should_update:
-                        return self.map_array
-                    
-                    # Just to avoid errors - not actually updating the map
-                    print("[INFO] Map update called (placeholder)")
+            
+            def get_map(self):
+                """Return the map as a 2D numpy array"""
+                # Ensure returned map is always a valid 2D numpy array
+                if not isinstance(self.map_array, np.ndarray) or len(self.map_array.shape) != 2:
+                    print("[WARNING] Map not in correct format, returning empty map")
+                    return np.zeros((100, 100), dtype=np.uint8)
+                return self.map_array
+            
+            def update(self, scan, new_position, should_update=True, *args, **kwargs):
+                """Update map with new scan data"""
+                if not should_update:
                     return self.map_array
                 
-        # Create dummy scanner objects
-        self.scan_size = 100  # Number of points in the scan
+                # Just a placeholder - actual map updating would go here
+                print("[INFO] Map update called (placeholder)")
+                return self.map_array
         
-        # Important: Create BOTH scan objects required by the SLAM algorithm
-        scan_for_distance = DummyScan(self.scan_size)
-        scan_for_mapbuild = DummyScan(self.scan_size)  # Need both scans
+        class DummyScan:
+            def __init__(self, size):
+                self.size = size
+                # Create all required attributes for SLAM
+                num_points = size
+                
+                # Distance array (initially 1000mm for all points)
+                self.distances_mm = np.ones(num_points) * 1000
+                
+                # Angle arrays (full 360 degrees coverage)
+                self.angles_rad = np.linspace(0, 2*np.pi, num_points)
+                self.angles_deg = np.degrees(self.angles_rad).tolist()  # Required by SLAM
+                
+                # Cartesian coordinates
+                self.xs_mm = np.cos(self.angles_rad) * self.distances_mm
+                self.ys_mm = np.sin(self.angles_rad) * self.distances_mm
+            
+            def update(self, scans_mm, hole_width_mm, *args, **kwargs):
+                """Update scan with new distance readings"""
+                if scans_mm is not None and len(scans_mm) > 0:
+                    # Create array from the input scans
+                    self.distances_mm = np.array(scans_mm)
+                    
+                    # Ensure angles match scan points
+                    if len(self.angles_rad) != len(scans_mm):
+                        self.angles_rad = np.linspace(0, 2*np.pi, len(scans_mm))
+                        self.angles_deg = np.degrees(self.angles_rad).tolist()
+                    
+                    # Update x,y coordinates
+                    self.xs_mm = np.cos(self.angles_rad) * self.distances_mm
+                    self.ys_mm = np.sin(self.angles_rad) * self.distances_mm
+                    
+                return self.distances_mm
         
-        # Create map wrapper
-        map_array = np.zeros((100, 100))  # Initial empty map (100x100)
-        map_wrapper = MapWrapper(map_array)
-        
-        # Create laser object required by SLAM
+        # Create laser parameters object
         class LaserParams:
             def __init__(self):
                 self.offset_mm = 0  # Assume laser is at center of robot
         
         laser = LaserParams()
         
-        # Initialize SLAM with all required components
-        self.slam = ParticleFilterSLAM(
-            laser=laser,
-            map_size_pixels=100,  # 100x100 pixel map
-            map_size_meters=10,   # 10x10 meter map
-            map_quality=50,       # Default quality
-            hole_width_mm=600     # Default hole width
-        )
+        # Get LiDAR resolution or use default
+        if hasattr(self, 'lidar') and hasattr(self.lidar, 'getHorizontalResolution'):
+            lidar_resolution = self.lidar.getHorizontalResolution()
+        else:
+            lidar_resolution = 100  # Default resolution
         
-        # IMPORTANT: Explicitly set both scan objects
-        self.slam.scan_for_mapbuild = scan_for_mapbuild
-        self.slam.scan_for_distance = scan_for_distance
+        # Create scan objects with proper resolution
+        scan_for_distance = DummyScan(lidar_resolution)
+        scan_for_mapbuild = DummyScan(lidar_resolution)
         
-        # Set the map wrapper as the map
-        self.slam.map = map_wrapper
-    
-        # Add simple default scan objects
+        # Create initial empty map (100x100)
+        map_array = np.zeros((100, 100), dtype=np.uint8)
+        map_wrapper = MapWrapper(map_array)
         
-        # Create a Map wrapper class for the SLAM map
-        
-    
-        # Replace the NumPy array with the wrapper object
-        self.slam.map = MapWrapper(self.slam.map)
-        lidar_resolution = self.lidar.getHorizontalResolution() if hasattr(self.lidar, 'getHorizontalResolution') else 100
-        self.slam.scan_for_mapbuild = DummyScan(lidar_resolution)
-        self.slam.scan_for_distance = DummyScan(lidar_resolution)
+        try:
+            # Initialize SLAM with all required components
+            self.slam = ParticleFilterSLAM(
+                laser=laser,
+                map_size_pixels=100,    # 100x100 pixel map
+                map_size_meters=10,     # 10x10 meter map
+                map_quality=50,         # Default quality
+                hole_width_mm=600       # Default hole width
+            )
+            
+            # Set required objects on SLAM instance
+            self.slam.scan_for_mapbuild = scan_for_mapbuild
+            self.slam.scan_for_distance = scan_for_distance
+            self.slam.map = map_wrapper
+            
+            print("[INFO] SLAM initialized successfully")
+        except Exception as e:
+            print(f"[ERROR] Failed to initialize SLAM: {str(e)}")
+            raise
         
 
     def _init_navigation(self):
