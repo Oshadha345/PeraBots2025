@@ -338,6 +338,11 @@ class TwoWheelController:
         self.left_motor.setVelocity(left_speed)
         self.right_motor.setVelocity(right_speed)
 
+    def get_position(self):
+        """Get the current position of the robot (x, y, theta)"""
+        # Return position from robot_state which is already being updated
+        return (self.robot_state.x, self.robot_state.y, self.robot_state.theta)
+    
     def plan_path(self, goal_x, goal_y):
         # Get current position
         current_x, current_y = self.get_position()[:2]  # Extract just x, y
