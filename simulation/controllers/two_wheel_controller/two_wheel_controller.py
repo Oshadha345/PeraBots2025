@@ -154,7 +154,6 @@ class TwoWheelController:
         self.left_pid = PID(self.config.PID_KP, self.config.PID_KI, self.config.PID_KD)
         self.right_pid = PID(self.config.PID_KP, self.config.PID_KI, self.config.PID_KD)
 
-   
     def _init_slam(self):
         """Initialize SLAM module"""
         # Create a laser object for the SLAM algorithm
@@ -182,7 +181,17 @@ class TwoWheelController:
         # Create and add the scan objects to the SLAM instance
         self.slam.scan_for_distance = DummyScan(self.config.MAP_SIZE_PIXELS)
         self.slam.scan_for_mapbuild = DummyScan(self.config.MAP_SIZE_PIXELS)
-
+        
+    # Create a Map wrapper class for the SLAM map
+    class MapWrapper:
+        def __init__(self, map_array):
+            self.map_array = map_array
+            
+        def get_map(self):
+            return self.map_array
+    
+    # Replace the NumPy array with the wrapper object
+    self.slam.map = MapWrapper(self.slam.map)
     def _init_navigation(self):
         """Initialize path planning and following modules"""
         # Path planning
