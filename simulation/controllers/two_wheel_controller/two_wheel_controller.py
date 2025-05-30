@@ -198,6 +198,8 @@ class TwoWheelController:
     
         # Replace the NumPy array with the wrapper object
         self.slam.map = MapWrapper(self.slam.map)
+        self.slam.scan_for_mapbuild = DummyScan(self.lidar_adapter.get_horizontal_resolution())
+        
 
     def _init_navigation(self):
         """Initialize path planning and following modules"""
