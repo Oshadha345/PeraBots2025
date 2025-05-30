@@ -1,3 +1,6 @@
+import time
+import math
+
 class ComplementaryFilter:
     def __init__(self, alpha=0.98):
         self.alpha = alpha
