@@ -516,7 +516,17 @@ class TwoWheelController:
         if self.display:
             # Implement visualization
             pass
-
+    def log_data(self, display=None):
+        """Custom method to log data without causing errors with SLAM"""
+        # Get robot state information
+        robot_x = float(self.robot_state.x) if not hasattr(self.robot_state.x, 'item') else float(self.robot_state.x.item())
+        robot_y = float(self.robot_state.y) if not hasattr(self.robot_state.y, 'item') else float(self.robot_state.y.item())
+        robot_theta = float(self.robot_state.theta) if not hasattr(self.robot_state.theta, 'item') else float(self.robot_state.theta.item())
+        
+        # Log information as needed
+        print(f"Robot position: ({robot_x:.2f}, {robot_y:.2f}, {robot_theta:.2f})")
+        
+        # If you need to visualize on display, add that code here
     def run(self):
         """Main control loop"""
         print("[INFO] Two Wheel Robot Controller initialized")
@@ -546,7 +556,7 @@ class TwoWheelController:
             self.visualize()
             
             # Log data
-            log_data(self.robot_state, self.slam)
+            self.log_data(display)
 
 # Main function
 def main():
