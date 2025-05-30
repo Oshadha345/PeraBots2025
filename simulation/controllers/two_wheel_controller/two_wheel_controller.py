@@ -258,8 +258,28 @@ class TwoWheelController:
         
         # Step 1: Update the state transition model based on time and current state
         dt = self.timestep / 1000.0  # Convert to seconds
-        theta = float(self.ekf.x[2].item())  # Extract scalar value to avoid deprecation warning
+        if hasattr(self.ekf.x[2], 'shape') and self.ekf.x[2].shape:
+            # If it's an array with dimensions
+            if len(self.ekf.x[2].shape) > 0 and self.ekf.x[2].shape[0] > 1:
+                # If it's a multi-element array, just take the first element
+                theta = float(self.ekf.x[2][0])
+            else:
+                # It's a single element array
+                theta = float(self.ekf.x[2])
+        elif hasattr(self.ekf.x[2], 'item'):
+            # If it has an item() method but no shape, try using item()
+            try:
+                theta = float(self.ekf.x[2].item())
+            except ValueError:
+                # If item() fails, use direct conversion
+                theta = float(self.ekf.x[2])
+        else:
+            # If not an array, convert directly
+            theta = float(self.ekf.x[2])       
+
         
+
+
         # Update state transition matrix for non-linear motion
         self.ekf.F[0, 3] = dt * np.cos(theta)  # x += v*dt*cos(theta)
         self.ekf.F[1, 3] = dt * np.sin(theta)  # y += v*dt*sin(theta)
