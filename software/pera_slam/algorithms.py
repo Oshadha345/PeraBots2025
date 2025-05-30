@@ -85,9 +85,19 @@ class SinglePositionSLAM(CoreSLAM):
         pass
     
     def get_position(self):
-        """Get current position as (x_mm, y_mm, theta_degrees)"""
-        return (self.position.x_mm, self.position.y_mm, self.position.theta_degrees)
-    
+        """Get the current position of the robot (x, y, theta)"""
+        # Extract scalar values from any potential NumPy arrays
+        if hasattr(self.robot_state.x, 'shape'):
+            # Handle arrays of any size
+            x = float(self.robot_state.x[0]) if len(self.robot_state.x.shape) > 0 else float(self.robot_state.x)
+            y = float(self.robot_state.y[0]) if len(self.robot_state.y.shape) > 0 else float(self.robot_state.y)
+            theta = float(self.robot_state.theta[0]) if len(self.robot_state.theta.shape) > 0 else float(self.robot_state.theta)
+        else:
+            # Not a NumPy array
+            x = float(self.robot_state.x)
+            y = float(self.robot_state.y)
+            theta = float(self.robot_state.theta)   
+        return (x, y, theta)
     def _cos_theta(self):
         """Helper to compute cosine of current orientation"""
         return math.cos(math.radians(self.position.theta_degrees))
