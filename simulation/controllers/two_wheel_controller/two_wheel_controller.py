@@ -36,7 +36,39 @@ from config.simulation_config import SimulationConfig
 
 # Import utilities
 from utils.webots_helpers import setup_display, log_data
-
+class DummyScan:
+    def __init__(self, size):
+        self.size = size
+        # Create reasonable defaults for all required attributes
+        num_points = 100  # Number of scan points
+        
+        # Create distance array (all points at 1000mm by default)
+        self.distances_mm = np.ones(num_points) * 1000
+        
+        # Create angle arrays (full 360 degrees)
+        self.angles_rad = np.linspace(0, 2*np.pi, num_points)
+        self.angles_deg = np.degrees(self.angles_rad).tolist()  # IMPORTANT: angles in degrees
+        
+        # Calculate x,y coordinates
+        self.xs_mm = np.cos(self.angles_rad) * self.distances_mm
+        self.ys_mm = np.sin(self.angles_rad) * self.distances_mm
+    
+    def update(self, scans_mm, hole_width_mm, *args, **kwargs):
+        """Update scan with new distance readings"""
+        if scans_mm is not None and len(scans_mm) > 0:
+            # Create array from the input scans
+            self.distances_mm = np.array(scans_mm)
+            
+            # If angles don't match the number of scan points, regenerate them
+            if len(self.angles_rad) != len(scans_mm):
+                self.angles_rad = np.linspace(0, 2*np.pi, len(scans_mm))
+                self.angles_deg = np.degrees(self.angles_rad).tolist()
+            
+            # Update x,y coordinates
+            self.xs_mm = np.cos(self.angles_rad) * self.distances_mm
+            self.ys_mm = np.sin(self.angles_rad) * self.distances_mm
+            
+        return self.distances_mm        
 class TwoWheelController:
     def __init__(self):
         """Initialize the controller"""
@@ -191,39 +223,7 @@ class TwoWheelController:
         self.slam.map = map_wrapper
     
         # Add simple default scan objects
-        class DummyScan:
-            def __init__(self, size):
-                self.size = size
-                # Create reasonable defaults for all required attributes
-                num_points = 100  # Number of scan points
-                
-                # Create distance array (all points at 1000mm by default)
-                self.distances_mm = np.ones(num_points) * 1000
-                
-                # Create angle arrays (full 360 degrees)
-                self.angles_rad = np.linspace(0, 2*np.pi, num_points)
-                self.angles_deg = np.degrees(self.angles_rad).tolist()  # IMPORTANT: angles in degrees
-                
-                # Calculate x,y coordinates
-                self.xs_mm = np.cos(self.angles_rad) * self.distances_mm
-                self.ys_mm = np.sin(self.angles_rad) * self.distances_mm
-            
-            def update(self, scans_mm, hole_width_mm, *args, **kwargs):
-                """Update scan with new distance readings"""
-                if scans_mm is not None and len(scans_mm) > 0:
-                    # Create array from the input scans
-                    self.distances_mm = np.array(scans_mm)
-                    
-                    # If angles don't match the number of scan points, regenerate them
-                    if len(self.angles_rad) != len(scans_mm):
-                        self.angles_rad = np.linspace(0, 2*np.pi, len(scans_mm))
-                        self.angles_deg = np.degrees(self.angles_rad).tolist()
-                    
-                    # Update x,y coordinates
-                    self.xs_mm = np.cos(self.angles_rad) * self.distances_mm
-                    self.ys_mm = np.sin(self.angles_rad) * self.distances_mm
-                    
-                return self.distances_mm
+        
         # Create a Map wrapper class for the SLAM map
         class MapWrapper:
             def __init__(self, map_array):
