@@ -172,3 +172,30 @@ class PathFollower:
         self.motor_controller.set_motor_speeds(0, 0)
         self.is_following_path = False
         print("Path following complete")
+    def follow_path(self):
+        """Follow the planned path"""
+        if not self.path or self.current_path_index >= len(self.path):
+            # No path or at the end of the path
+            self.set_motor_speeds(0, 0)
+            return
+        
+        # Get next waypoint
+        waypoint = self.path[self.current_path_index]
+        
+        # Get current position - ensure these are scalar values
+        current_pos = self.get_position()
+        current_x = float(current_pos[0]) if hasattr(current_pos[0], 'shape') else float(current_pos[0])
+        current_y = float(current_pos[1]) if hasattr(current_pos[1], 'shape') else float(current_pos[1])
+        current_theta = float(current_pos[2]) if hasattr(current_pos[2], 'shape') else float(current_pos[2])
+        
+        # Ensure waypoint coordinates are scalar values
+        waypoint_x = float(waypoint[0]) if hasattr(waypoint[0], 'shape') else float(waypoint[0])
+        waypoint_y = float(waypoint[1]) if hasattr(waypoint[1], 'shape') else float(waypoint[1])
+        
+        # Calculate distance to waypoint using scalar values
+        distance_to_waypoint = math.sqrt(
+            (waypoint_x - current_x)**2 + (waypoint_y - current_y)**2
+        )
+        
+        # Rest of your follow_path implementation
+        # ...
