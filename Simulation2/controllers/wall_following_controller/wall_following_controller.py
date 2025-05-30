@@ -31,6 +31,15 @@ class WallFollowingController:
         
         self.left_wheel_sensor = self.robot.getDevice('left_wheel_sensor')
         self.right_wheel_sensor = self.robot.getDevice('right_wheel_sensor')
+        self.left_wheel_motor = self.robot.getDevice('left_wheel_motor')
+        self.right_wheel_motor = self.robot.getDevice('right_wheel_motor')
+         # Set motors to velocity control mode (IMPORTANT)
+        self.left_wheel_motor.setPosition(float('inf'))
+        self.right_wheel_motor.setPosition(float('inf'))
+    
+        # Initialize with zero velocity
+        self.left_wheel_motor.setVelocity(0)
+        self.right_wheel_motor.setVelocity(0)
         self.left_wheel_sensor.enable(self.timestep)
         self.right_wheel_sensor.enable(self.timestep)
         self.lidar_adapter = WebotsLidarAdapter(self.robot.getDevice('lidar'), self.config)
@@ -94,8 +103,9 @@ class WallFollowingController:
             self.set_motor_speeds(self.config.DEFAULT_SPEED, -self.config.DEFAULT_SPEED)  # Turn left
 
     def set_motor_speeds(self, left_speed, right_speed):
-        self.robot.getDevice('left_wheel_motor').setVelocity(left_speed)
-        self.robot.getDevice('right_wheel_motor').setVelocity(right_speed)
+        self.left_wheel_motor.setVelocity(left_speed)
+        self.right_wheel_motor.setVelocity(right_speed)
+        
 
     def run(self):
         while self.robot.step(self.timestep) != -1:
