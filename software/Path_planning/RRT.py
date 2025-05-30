@@ -8,7 +8,7 @@ class RRTStar:
     """RRT* algorithm for path planning"""
     
     def __init__(self, map_array, start, goal, max_iterations=1000, step_size=5, 
-                 goal_sample_rate=0.1, search_radius=20.0):
+             goal_sample_rate=0.1, search_radius=20.0):
         """
         Initialize RRT* planner
         map_array: Binary map (0=free, 255=obstacle)
@@ -16,23 +16,38 @@ class RRTStar:
         goal: Goal position (x, y) in map coordinates
         """
         self.map = map_array
-        self.start = start
-        self.goal = goal
+    
+        # Convert start and goal to simple tuples with scalar values
+        self.start = (float(start[0]), float(start[1])) if hasattr(start, '__len__') else (float(start), 0.0)
+        self.goal = (float(goal[0]), float(goal[1])) if hasattr(goal, '__len__') else (float(goal), 0.0)
+    
+        # Rest of initialization code...
         self.max_iterations = max_iterations
         self.step_size = step_size
         self.goal_sample_rate = goal_sample_rate
         self.search_radius = search_radius
+    
+        # Now use the converted values for checking
+        start_x, start_y = int(self.start[0]), int(self.start[1])
+        goal_x, goal_y = int(self.goal[0]), int(self.goal[1])
+    
+        # Check if coordinates are within map bounds
+        if 0 <= start_y < self.map.shape[0] and 0 <= start_x < self.map.shape[1]:
+            if self.map[start_y, start_x] != 0:
+                print("WARNING: Start position is in obstacle space!")
+        else:
+            print("WARNING: Start position is outside map boundaries!")
         
-        # Check if start and goal are valid
-        if self.map[int(start[1]), int(start[0])] != 0:
-            print("WARNING: Start position is in obstacle space!")
-        if self.map[int(goal[1]), int(goal[0])] != 0:
-            print("WARNING: Goal position is in obstacle space!")
+        if 0 <= goal_y < self.map.shape[0] and 0 <= goal_x < self.map.shape[1]:
+            if self.map[goal_y, goal_x] != 0:
+                print("WARNING: Goal position is in obstacle space!")
+        else:
+            print("WARNING: Goal position is outside map boundaries!")
             
         # Initialize node list with start node
-        self.nodes = [{'x': start[0], 'y': start[1], 'parent': None, 'cost': 0}]
+        self.nodes = [{'x': self.start[0], 'y': self.start[1], 'parent': None, 'cost': 0}]
         self.goal_node = None
-        
+    
         # For visualization
         self.tree_edges = []
         
