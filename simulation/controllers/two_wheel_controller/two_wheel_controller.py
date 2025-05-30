@@ -198,7 +198,7 @@ class TwoWheelController:
                 # Add map parameters
                 self.map_size_pixels = 100  # Size in pixels (same as your initialized 100x100 array)
                 self.map_size_meters = 10   # Size in meters (from your SLAM initialization)
-            
+                self.size_pixels = self.map_size_pixels
             # Existing methods...
             
             def world_to_map(self, world_x_mm, world_y_mm):
