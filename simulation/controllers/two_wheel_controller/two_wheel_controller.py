@@ -36,39 +36,7 @@ from config.simulation_config import SimulationConfig
 
 # Import utilities
 from utils.webots_helpers import setup_display, log_data
-class DummyScan:
-    def __init__(self, size):
-        self.size = size
-        # Create reasonable defaults for all required attributes
-        num_points = 100  # Number of scan points
-        
-        # Create distance array (all points at 1000mm by default)
-        self.distances_mm = np.ones(num_points) * 1000
-        
-        # Create angle arrays (full 360 degrees)
-        self.angles_rad = np.linspace(0, 2*np.pi, num_points)
-        self.angles_deg = np.degrees(self.angles_rad).tolist()  # IMPORTANT: angles in degrees
-        
-        # Calculate x,y coordinates
-        self.xs_mm = np.cos(self.angles_rad) * self.distances_mm
-        self.ys_mm = np.sin(self.angles_rad) * self.distances_mm
-    
-    def update(self, scans_mm, hole_width_mm, *args, **kwargs):
-        """Update scan with new distance readings"""
-        if scans_mm is not None and len(scans_mm) > 0:
-            # Create array from the input scans
-            self.distances_mm = np.array(scans_mm)
-            
-            # If angles don't match the number of scan points, regenerate them
-            if len(self.angles_rad) != len(scans_mm):
-                self.angles_rad = np.linspace(0, 2*np.pi, len(scans_mm))
-                self.angles_deg = np.degrees(self.angles_rad).tolist()
-            
-            # Update x,y coordinates
-            self.xs_mm = np.cos(self.angles_rad) * self.distances_mm
-            self.ys_mm = np.sin(self.angles_rad) * self.distances_mm
-            
-        return self.distances_mm        
+
 class TwoWheelController:
     def __init__(self):
         """Initialize the controller"""
@@ -106,6 +74,23 @@ class TwoWheelController:
         self.path = []
         self.current_path_index = 0
         self.target_position = None
+
+        # State machine for robot operation
+        self.ROBOT_STATE_EXPLORE = 0
+        self.ROBOT_STATE_RETURN_HOME = 1
+        self.ROBOT_STATE_PLAN_PATH = 2
+        self.ROBOT_STATE_FOLLOW_PATH = 3
+        self.current_state = self.ROBOT_STATE_EXPLORE
+        
+        # Exploration parameters
+        self.home_position = [0, 0]  # Will be set when robot starts
+        self.exploration_start_time = None
+        self.exploration_timeout = 180  # 3 minutes
+        
+        # Coverage tracking
+        self.coverage_threshold = 0.75  # 75% map coverage
+        self.prev_coverage = 0.0
+        self.stall_counter = 0
         
         print("[INFO] Two Wheel Robot Controller initialized")
 
@@ -186,148 +171,44 @@ class TwoWheelController:
         self.left_pid = PID(self.config.PID_KP, self.config.PID_KI, self.config.PID_KD)
         self.right_pid = PID(self.config.PID_KP, self.config.PID_KI, self.config.PID_KD)
 
-    
-
     def _init_slam(self):
-        """Initialize SLAM components for localization and mapping"""
-        
-        class MapWrapper:
-            def __init__(self, map_array):
-                # Existing initialization code...
-                self.map_array = map_array
-                # Add map parameters
-                self.map_size_pixels = 100  # Size in pixels (same as your initialized 100x100 array)
-                self.map_size_meters = 10   # Size in meters (from your SLAM initialization)
-                self.size_pixels = self.map_size_pixels
-            # Existing methods...
-            
-            def world_to_map(self, world_x_mm, world_y_mm):
-                """Convert world coordinates (mm) to map pixel coordinates"""
-                # Check for NaN inputs first
-                if np.isnan(world_x_mm) or np.isnan(world_y_mm):
-                    # Return center of map for NaN coordinates
-                    return self.map_size_pixels // 2, self.map_size_pixels // 2
-                
-                # Convert mm to meters first
-                world_x_m = world_x_mm / 1000.0
-                world_y_m = world_y_mm / 1000.0
-                
-                # Calculate scaling factor (guard against division by zero)
-                if self.map_size_meters == 0:
-                    scale = 1.0  # Default scale if map_size_meters is zero
-                else:
-                    scale = self.map_size_pixels / self.map_size_meters
-                
-                # Convert to pixel coordinates
-                # Center the origin in the middle of the map
-                map_center = self.map_size_pixels / 2
-                
-                # Guard against NaN results
-                try:
-                    pixel_x = int(map_center + (world_x_m * scale))
-                    pixel_y = int(map_center - (world_y_m * scale))  # Y is flipped in image coordinates
-                except (ValueError, OverflowError):
-                    # Fall back to center if calculation fails
-                    return self.map_size_pixels // 2, self.map_size_pixels // 2
-                
-                # Ensure within map bounds
-                pixel_x = max(0, min(self.map_size_pixels-1, pixel_x))
-                pixel_y = max(0, min(self.map_size_pixels-1, pixel_y))
-                
-                return pixel_x, pixel_y
-                
-            def get_map(self):
-                """Return the map as a 2D numpy array"""
-                # Ensure returned map is always a valid 2D numpy array
-                if not isinstance(self.map_array, np.ndarray) or len(self.map_array.shape) != 2:
-                    print("[WARNING] Map not in correct format, returning empty map")
-                    return np.zeros((100, 100), dtype=np.uint8)
-                return self.map_array
-            
-            def update(self, scan, new_position, should_update=True, *args, **kwargs):
-                """Update map with new scan data"""
-                if not should_update:
-                    return self.map_array
-                
-                # Just a placeholder - actual map updating would go here
-                print("[INFO] Map update called (placeholder)")
-                return self.map_array
-        
+        """Initialize SLAM module"""
+        # Create a laser object for the SLAM algorithm
+        self.laser = RPLidarA1(offset_mm=self.config.LIDAR_OFFSET_MM)
+    
+        # Create SLAM instance
+        self.slam = ParticleFilterSLAM(
+            laser=self.laser,
+            map_size_pixels=self.config.MAP_SIZE_PIXELS,
+            map_size_meters=self.config.MAP_SIZE_METERS,
+            map_quality=self.config.MAP_QUALITY,
+            hole_width_mm=self.config.HOLE_WIDTH_MM,
+            num_particles=self.config.NUM_PARTICLES
+        )
+    
+        # Add simple default scan objects
         class DummyScan:
             def __init__(self, size):
                 self.size = size
-                # Create all required attributes for SLAM
-                num_points = size
-                
-                # Distance array (initially 1000mm for all points)
-                self.distances_mm = np.ones(num_points) * 1000
-                
-                # Angle arrays (full 360 degrees coverage)
-                self.angles_rad = np.linspace(0, 2*np.pi, num_points)
-                self.angles_deg = np.degrees(self.angles_rad).tolist()  # Required by SLAM
-                
-                # Cartesian coordinates
-                self.xs_mm = np.cos(self.angles_rad) * self.distances_mm
-                self.ys_mm = np.sin(self.angles_rad) * self.distances_mm
-            
+        
             def update(self, scans_mm, hole_width_mm, *args, **kwargs):
-                """Update scan with new distance readings"""
-                if scans_mm is not None and len(scans_mm) > 0:
-                    # Create array from the input scans
-                    self.distances_mm = np.array(scans_mm)
-                    
-                    # Ensure angles match scan points
-                    if len(self.angles_rad) != len(scans_mm):
-                        self.angles_rad = np.linspace(0, 2*np.pi, len(scans_mm))
-                        self.angles_deg = np.degrees(self.angles_rad).tolist()
-                    
-                    # Update x,y coordinates
-                    self.xs_mm = np.cos(self.angles_rad) * self.distances_mm
-                    self.ys_mm = np.sin(self.angles_rad) * self.distances_mm
-                    
-                return self.distances_mm
+                # Minimal implementation that does nothing but prevents errors
+                pass
+    
+        # Create and add the scan objects to the SLAM instance
+        self.slam.scan_for_distance = DummyScan(self.config.MAP_SIZE_PIXELS)
+        self.slam.scan_for_mapbuild = DummyScan(self.config.MAP_SIZE_PIXELS)
         
-        # Create laser parameters object
-        class LaserParams:
-            def __init__(self):
-                self.offset_mm = 0  # Assume laser is at center of robot
-        
-        laser = LaserParams()
-        
-        # Get LiDAR resolution or use default
-        if hasattr(self, 'lidar') and hasattr(self.lidar, 'getHorizontalResolution'):
-            lidar_resolution = self.lidar.getHorizontalResolution()
-        else:
-            lidar_resolution = 100  # Default resolution
-        
-        # Create scan objects with proper resolution
-        scan_for_distance = DummyScan(lidar_resolution)
-        scan_for_mapbuild = DummyScan(lidar_resolution)
-        
-        # Create initial empty map (100x100)
-        map_array = np.zeros((100, 100), dtype=np.uint8)
-        map_wrapper = MapWrapper(map_array)
-        
-        try:
-            # Initialize SLAM with all required components
-            self.slam = ParticleFilterSLAM(
-                laser=laser,
-                map_size_pixels=100,    # 100x100 pixel map
-                map_size_meters=10,     # 10x10 meter map
-                map_quality=50,         # Default quality
-                hole_width_mm=600       # Default hole width
-            )
+        # Create a Map wrapper class for the SLAM map
+        class MapWrapper:
+            def __init__(self, map_array):
+                self.map_array = map_array
             
-            # Set required objects on SLAM instance
-            self.slam.scan_for_mapbuild = scan_for_mapbuild
-            self.slam.scan_for_distance = scan_for_distance
-            self.slam.map = map_wrapper
-            
-            print("[INFO] SLAM initialized successfully")
-        except Exception as e:
-            print(f"[ERROR] Failed to initialize SLAM: {str(e)}")
-            raise
-        
+            def get_map(self):
+                return self.map_array
+    
+        # Replace the NumPy array with the wrapper object
+        self.slam.map = MapWrapper(self.slam.map)
 
     def _init_navigation(self):
         """Initialize path planning and following modules"""
@@ -354,28 +235,8 @@ class TwoWheelController:
         
         # Step 1: Update the state transition model based on time and current state
         dt = self.timestep / 1000.0  # Convert to seconds
-        if hasattr(self.ekf.x[2], 'shape') and self.ekf.x[2].shape:
-            # If it's an array with dimensions
-            if len(self.ekf.x[2].shape) > 0 and self.ekf.x[2].shape[0] > 1:
-                # If it's a multi-element array, just take the first element
-                theta = float(self.ekf.x[2][0])
-            else:
-                # It's a single element array
-                theta = float(self.ekf.x[2])
-        elif hasattr(self.ekf.x[2], 'item'):
-            # If it has an item() method but no shape, try using item()
-            try:
-                theta = float(self.ekf.x[2].item())
-            except ValueError:
-                # If item() fails, use direct conversion
-                theta = float(self.ekf.x[2])
-        else:
-            # If not an array, convert directly
-            theta = float(self.ekf.x[2])       
-
+        theta = float(self.ekf.x[2].item())  # Extract scalar value to avoid deprecation warning
         
-
-
         # Update state transition matrix for non-linear motion
         self.ekf.F[0, 3] = dt * np.cos(theta)  # x += v*dt*cos(theta)
         self.ekf.F[1, 3] = dt * np.sin(theta)  # y += v*dt*sin(theta)
@@ -454,46 +315,27 @@ class TwoWheelController:
         self.left_motor.setVelocity(left_speed)
         self.right_motor.setVelocity(right_speed)
 
+    def plan_path(self, target_x, target_y):
+        """Plan a path to the target position"""
+        # Get current map from SLAM
+        obstacle_map = self.slam.get_map()
     
-    def get_position(self):
-        """Get the current position of the robot (x, y, theta)"""
-        # Extract scalar values from any potential NumPy arrays
-        if hasattr(self.robot_state.x, 'shape'):
-            # Handle arrays of any size
-            x = float(self.robot_state.x[0]) if len(self.robot_state.x.shape) > 0 else float(self.robot_state.x)
-            y = float(self.robot_state.y[0]) if len(self.robot_state.y.shape) > 0 else float(self.robot_state.y)
-            theta = float(self.robot_state.theta[0]) if len(self.robot_state.theta.shape) > 0 else float(self.robot_state.theta)
-        else:
-            # Not a NumPy array
-            x = float(self.robot_state.x)
-            y = float(self.robot_state.y)
-            theta = float(self.robot_state.theta)
-        
-        return (x, y, theta)
-            
-    
-    def plan_path(self, goal_x, goal_y):
         # Get current position
-        current_x, current_y = self.get_position()[:2]  # Extract just x, y
+        start = (self.robot_state.x, self.robot_state.y)
+        goal = (target_x, target_y)
     
-        # Create occupancy grid from SLAM map
-        occupancy_grid = self.slam.map.get_map()  # Assuming this returns a 2D numpy array
-    
-        # Initialize path planner
+        # Create a new RRTStar instance with the current map and positions
         self.path_planner = RRTStar(
-            map_array=occupancy_grid,
-            start=(current_x, current_y),  # Make sure these are simple tuples or values
-            goal=(goal_x, goal_y),
-            max_iterations=1000,
-            step_size=0.1,
-            search_radius=0.5
+            map_array=obstacle_map, 
+            start=start, 
+            goal=goal
         )
-
+    
         # Plan the path (assuming plan() takes no arguments since they're already provided in constructor)
         self.path = self.path_planner.plan()
     
         self.current_path_index = 0
-        self.target_position = (goal_x, goal_y)
+        self.target_position = goal
 
     def follow_path(self):
         """Follow the planned path"""
@@ -505,34 +347,29 @@ class TwoWheelController:
         # Get next waypoint
         waypoint = self.path[self.current_path_index]
         
-        # Get current position and convert to scalar values
-        current_pos = self.get_position()
-        current_x = float(current_pos[0]) if hasattr(current_pos[0], 'shape') else float(current_pos[0])
-        current_y = float(current_pos[1]) if hasattr(current_pos[1], 'shape') else float(current_pos[1])
-        current_theta = float(current_pos[2]) if hasattr(current_pos[2], 'shape') else float(current_pos[2])
-        
-        # Ensure waypoint coordinates are scalar values
-        waypoint_x = float(waypoint[0]) if hasattr(waypoint[0], 'shape') else float(waypoint[0])
-        waypoint_y = float(waypoint[1]) if hasattr(waypoint[1], 'shape') else float(waypoint[1])
-        
-        # Calculate distance to waypoint using scalar values
-        distance_to_waypoint = math.sqrt(
-            (waypoint_x - current_x)**2 + (waypoint_y - current_y)**2
-        )
-        
-        # Calculate control outputs
+        # Calculate control outputs using the path follower
         linear_vel, angular_vel = self.path_follower.compute_velocity(
-            current_x, current_y, current_theta,
-            waypoint_x, waypoint_y
+            self.robot_state.x,
+            self.robot_state.y,
+            self.robot_state.theta,
+            waypoint[0],
+            waypoint[1]
         )
+        
+        # Convert to wheel velocities
+        left_speed, right_speed = self.convert_to_wheel_speeds(linear_vel, angular_vel)
         
         # Set motor speeds
-        self.set_motor_speeds(linear_vel, angular_vel)
+        self.set_motor_speeds(left_speed, right_speed)
         
-        # Check if we've reached the waypoint
-        if distance_to_waypoint < 0.1:  # 10cm tolerance
+        # Check if we've reached the current waypoint
+        distance_to_waypoint = math.sqrt(
+            (self.robot_state.x - waypoint[0])**2 + 
+            (self.robot_state.y - waypoint[1])**2
+        )
+        
+        if distance_to_waypoint < self.config.WAYPOINT_THRESHOLD:
             self.current_path_index += 1
-            print(f"Reached waypoint {self.current_path_index-1}, moving to next waypoint")
 
     def convert_to_wheel_speeds(self, linear_vel, angular_vel):
         """Convert linear and angular velocity to wheel speeds"""
@@ -552,35 +389,7 @@ class TwoWheelController:
         if self.display:
             # Implement visualization
             pass
-    def log_data(self, display=None):
-        """Custom method to log data without causing errors with SLAM"""
-        try:
-            # Safely extract x coordinate
-            if hasattr(self.robot_state.x, 'shape') and self.robot_state.x.shape:
-                # If it's an array with dimensions, take first element
-                robot_x = float(self.robot_state.x[0])
-            else:
-                # Otherwise convert directly
-                robot_x = float(self.robot_state.x)
-                
-            # Safely extract y coordinate
-            if hasattr(self.robot_state.y, 'shape') and self.robot_state.y.shape:
-                robot_y = float(self.robot_state.y[0])
-            else:
-                robot_y = float(self.robot_state.y)
-                
-            # Safely extract theta/orientation
-            if hasattr(self.robot_state.theta, 'shape') and self.robot_state.theta.shape:
-                robot_theta = float(self.robot_state.theta[0])
-            else:
-                robot_theta = float(self.robot_state.theta)
-                
-            # Log information
-            print(f"Robot position: ({robot_x:.2f}, {robot_y:.2f}, {robot_theta:.2f})")
-        except Exception as e:
-            print(f"[WARNING] Error logging position data: {str(e)}")
-        
-        # If you need to visualize on display, add that code here
+
     def run(self):
         """Main control loop"""
         print("[INFO] Two Wheel Robot Controller initialized")
@@ -610,7 +419,7 @@ class TwoWheelController:
             self.visualize()
             
             # Log data
-            self.log_data(display)
+            log_data(self.robot_state, self.slam)
 
 # Main function
 def main():
