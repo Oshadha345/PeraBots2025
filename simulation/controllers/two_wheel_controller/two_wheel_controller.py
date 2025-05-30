@@ -518,13 +518,31 @@ class TwoWheelController:
             pass
     def log_data(self, display=None):
         """Custom method to log data without causing errors with SLAM"""
-        # Get robot state information
-        robot_x = float(self.robot_state.x) if not hasattr(self.robot_state.x, 'item') else float(self.robot_state.x.item())
-        robot_y = float(self.robot_state.y) if not hasattr(self.robot_state.y, 'item') else float(self.robot_state.y.item())
-        robot_theta = float(self.robot_state.theta) if not hasattr(self.robot_state.theta, 'item') else float(self.robot_state.theta.item())
-        
-        # Log information as needed
-        print(f"Robot position: ({robot_x:.2f}, {robot_y:.2f}, {robot_theta:.2f})")
+        try:
+            # Safely extract x coordinate
+            if hasattr(self.robot_state.x, 'shape') and self.robot_state.x.shape:
+                # If it's an array with dimensions, take first element
+                robot_x = float(self.robot_state.x[0])
+            else:
+                # Otherwise convert directly
+                robot_x = float(self.robot_state.x)
+                
+            # Safely extract y coordinate
+            if hasattr(self.robot_state.y, 'shape') and self.robot_state.y.shape:
+                robot_y = float(self.robot_state.y[0])
+            else:
+                robot_y = float(self.robot_state.y)
+                
+            # Safely extract theta/orientation
+            if hasattr(self.robot_state.theta, 'shape') and self.robot_state.theta.shape:
+                robot_theta = float(self.robot_state.theta[0])
+            else:
+                robot_theta = float(self.robot_state.theta)
+                
+            # Log information
+            print(f"Robot position: ({robot_x:.2f}, {robot_y:.2f}, {robot_theta:.2f})")
+        except Exception as e:
+            print(f"[WARNING] Error logging position data: {str(e)}")
         
         # If you need to visualize on display, add that code here
     def run(self):
