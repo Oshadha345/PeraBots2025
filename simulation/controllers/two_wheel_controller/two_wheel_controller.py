@@ -203,18 +203,32 @@ class TwoWheelController:
             
             def world_to_map(self, world_x_mm, world_y_mm):
                 """Convert world coordinates (mm) to map pixel coordinates"""
+                # Check for NaN inputs first
+                if np.isnan(world_x_mm) or np.isnan(world_y_mm):
+                    # Return center of map for NaN coordinates
+                    return self.map_size_pixels // 2, self.map_size_pixels // 2
+                
                 # Convert mm to meters first
                 world_x_m = world_x_mm / 1000.0
                 world_y_m = world_y_mm / 1000.0
                 
-                # Calculate scaling factor
-                scale = self.map_size_pixels / self.map_size_meters
+                # Calculate scaling factor (guard against division by zero)
+                if self.map_size_meters == 0:
+                    scale = 1.0  # Default scale if map_size_meters is zero
+                else:
+                    scale = self.map_size_pixels / self.map_size_meters
                 
                 # Convert to pixel coordinates
                 # Center the origin in the middle of the map
                 map_center = self.map_size_pixels / 2
-                pixel_x = int(map_center + (world_x_m * scale))
-                pixel_y = int(map_center - (world_y_m * scale))  # Y is flipped in image coordinates
+                
+                # Guard against NaN results
+                try:
+                    pixel_x = int(map_center + (world_x_m * scale))
+                    pixel_y = int(map_center - (world_y_m * scale))  # Y is flipped in image coordinates
+                except (ValueError, OverflowError):
+                    # Fall back to center if calculation fails
+                    return self.map_size_pixels // 2, self.map_size_pixels // 2
                 
                 # Ensure within map bounds
                 pixel_x = max(0, min(self.map_size_pixels-1, pixel_x))
