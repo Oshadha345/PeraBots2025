@@ -101,7 +101,41 @@ class PathFollower:
         self.motor_controller.set_motor_speeds(left_speed, right_speed)
         
         return False
+    def compute_velocity(self, robot_x, robot_y, robot_theta, target_x, target_y):
+        """
+        Compute linear and angular velocities to reach a target point.
         
+        Args:
+            robot_x: Current robot x position
+            robot_y: Current robot y position
+            robot_theta: Current robot heading in radians
+            target_x: Target x position
+            target_y: Target y position
+            
+        Returns:
+            (linear_vel, angular_vel): Velocity commands
+        """
+        # Calculate distance and angle to target
+        dx = target_x - robot_x
+        dy = target_y - robot_y
+        distance = math.sqrt(dx*dx + dy*dy)
+        
+        # Calculate desired heading (angle to target)
+        desired_heading = math.atan2(dy, dx)
+        
+        # Calculate heading error (normalize to -pi to pi)
+        heading_error = desired_heading - robot_theta
+        while heading_error > math.pi:
+            heading_error -= 2 * math.pi
+        while heading_error < -math.pi:
+            heading_error += 2 * math.pi
+        
+        # Simple proportional control
+        # You can adjust these gains based on your robot's performance
+        linear_vel = min(0.5, 0.3 * distance)  # Cap at 0.5 m/s
+        angular_vel = 1.0 * heading_error      # Proportional gain of 1.0
+        
+        return linear_vel, angular_vel    
     def velocities_to_motor_commands(self, linear_vel: float, angular_vel: float) -> Tuple[float, float]:
         """
         Convert linear and angular velocities to left and right wheel speeds.
